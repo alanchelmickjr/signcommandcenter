@@ -1,11 +1,21 @@
 INFO:__main__:✅ Loaded trained ASL model: 10 commands
 INFO:__main__:Starting ASL Recognition Server for Berkeley Cal Hacks 2025
 INFO:__main__:Llama server: http://localhost:8080
-INFO:__main__:Robot API: http://localhost:5000
+INFO:__main__:Robot API: http://localhost:5001
 INFO:__main__:ASL commands loaded: 17
-INFO:__main__:Starting ASL server on port 5000
+INFO:__main__:Starting ASL server on port 5001
+🧪 Testing ASL recognition patterns...
+  ✅ Pattern recognition working: I see a hand waving, this look...
+  ✅ Pattern recognition working: The person is making a stop ge...
+  ✅ Pattern recognition working: I observe a grasping motion, p...
+🤟 Model Status: ready
+🚀 ASL server ready on port 5001
  * Serving Flask app 'asl_server'
  * Debug mode: off
-Address already in use
-Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.
-On macOS, try disabling the 'AirPlay Receiver' service from System Preferences -> General -> AirDrop & Handoff.
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.12.221:5001
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [22/Jun/2025 08:45:16] "GET /health HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [22/Jun/2025 08:45:28] "GET /test_recognition HTTP/1.1" 200 -
