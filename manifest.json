@@ -1,7 +1,7 @@
 {
-  "name": "ASL Command Center",
+  "name": "ASL Command Center - Assistive Technology",
   "short_name": "ASLCenter",
-  "description": "Real-time sign language recognition for robot control and AI assistance",
+  "description": "Assistive technology: Real-time sign language recognition for robot control and AI assistance powered by Claude, Gemini, Vapi",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#e6e9ef",

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ASL Command Center - Real-Time Sign Language Recognition Input Interface</title>
+    <title>ASL Command Center - Assistive Technology • CLAUDE • GEMINI • VAPI • NEXT.JS</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>�</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>�</text></svg>">
@@ -962,7 +962,7 @@
             <i>🔌</i>
             <div style="flex: 1;">
                 <label class="settings-label">API Server</label>
-                <input id="baseURL" class="settings-input" value="http://localhost:8080" style="width: 100%; margin-top: 4px;">
+                <input id="baseURL" class="settings-input" value="" style="width: 100%; margin-top: 4px;">
             </div>
         </div>
     </div>
@@ -1043,10 +1043,13 @@
     <!-- Gun.js for local data persistence -->
     <script src="https://cdn.jsdelivr.net/npm/gun@0.2020.1235/gun.js"></script>
     
+    <!-- Dynamic configuration loaded by start.sh -->
+    <script src="config.js"></script>
+    
     <script>
-        // Initialize Gun.js with relay server for data persistence
+        // Initialize Gun.js with dynamic relay server
         const gun = Gun({
-            peers: ['http://localhost:8765/gun'] // Relay server
+            peers: [window.ASL_CONFIG?.GUN_RELAY_URL || 'http://localhost:8765/gun']
         });
         const aslData = gun.get('asl-training-data');
         
@@ -1083,6 +1086,12 @@
         let isProcessing = false;
         let aslServerAvailable = false;
 
+        // Dynamic server URLs based on configuration
+        const AI_SERVER_URL = window.ASL_CONFIG?.AI_SERVER_URL || 'http://localhost:8080';
+        const ASL_SERVER_URL = window.ASL_CONFIG?.ASL_SERVER_URL || 'http://localhost:5000';
+        
+        console.log('Using dynamic server URLs:', { AI_SERVER_URL, ASL_SERVER_URL });
+
         // ASL recognition instruction for SmolVLM
         const ASL_RECOGNITION_INSTRUCTION = `Look at this image and identify any American Sign Language (ASL) gestures being performed.
 
@@ -1103,8 +1112,7 @@ Common ASL signs to look for:
 
 If no clear ASL gesture is visible, respond with "RECOGNIZED_ASL: none"`;
 
-        // ASL server endpoints
-        const ASL_SERVER_URL = 'http://localhost:5000';
+        // ASL server endpoints - now dynamically configured
         
         // Function to send ASL data to server for processing
         async function sendToAslServer(imageData, recognizedText) {
@@ -2100,12 +2108,23 @@ If no clear ASL gesture is visible, respond with "RECOGNIZED_ASL: none"`;
         // Llama chat handler
         function setupLlamaChat() {
             document.getElementById('llamaBtn').addEventListener('click', () => {
-                window.open('http://localhost:8080', '_blank');
+                const aiServerUrl = window.ASL_CONFIG?.AI_SERVER_URL || 'http://localhost:8080';
+                window.open(aiServerUrl, '_blank');
             });
         }
 
         // Initialize the app
         async function initApp() {
+            // Set up dynamic URLs from configuration
+            if (window.ASL_CONFIG) {
+                baseURL.value = window.ASL_CONFIG.AI_SERVER_URL;
+                console.log('Configured AI Server URL:', window.ASL_CONFIG.AI_SERVER_URL);
+                console.log('Configured ASL Server URL:', window.ASL_CONFIG.ASL_SERVER_URL);
+            } else {
+                console.warn('ASL_CONFIG not found, using default URLs');
+                baseURL.value = 'http://localhost:8080';
+            }
+            
             await initCamera();
             checkSystemConfiguration();
             setupCameraRotation();
