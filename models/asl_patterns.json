@@ -82,7 +82,7 @@
   }
  },
  "trained_commands": 10,
- "training_date": "2025-06-22T01:28:32.920918",
+ "training_date": "2025-06-22T01:59:11.476600",
  "device": "cpu",
  "status": "ready",
  "confidence_threshold": 0.7,
