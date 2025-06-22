@@ -1,0 +1,39 @@
+<!-- Training Data Modal -->
+<div id="trainingModal" class="setup-modal" style="display: none;">
+    <div class="setup-card">
+        <div class="setup-header">
+            <h2 class="setup-title">ASL Training Data Collection</h2>
+            <p class="setup-subtitle">Help improve ASL recognition accuracy</p>
+        </div>
+        
+        <div class="setup-content">
+            <div class="step-description">
+                <strong>Training Data Status:</strong>
+                <div style="background: rgba(56, 178, 172, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                    <div id="trainingStats">
+                        📊 <span id="collectedCount">0</span> signs collected<br>
+                        🎯 Goal: 50+ examples per sign type<br>
+                        📈 Current accuracy: <span id="currentAccuracy">Training needed</span>
+                    </div>
+                </div>
+                
+                <strong>How Training Works:</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>System automatically saves your ASL signs</li>
+                    <li>Data stays local on your device</li>
+                    <li>More data = better recognition accuracy</li>
+                    <li>Train custom signs for your needs</li>
+                </ul>
+                
+                <strong>Privacy:</strong><br>
+                All training data is stored locally. Nothing is uploaded to the cloud.
+            </div>
+        </div>
+
+        <div class="setup-buttons">
+            <button id="exportDataBtn" class="setup-button secondary">Export Data</button>
+            <button id="clearDataBtn" class="setup-button secondary">Clear Data</button>
+            <button id="trainingCloseBtn" class="setup-button primary">Close</button>
+        </div>
+    </div>
+</div>

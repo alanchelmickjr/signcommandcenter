@@ -1,4 +1,9 @@
-127.0.0.1 - - [22/Jun/2025 01:59:31] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [22/Jun/2025 01:59:31] "GET /manifest.json HTTP/1.1" 200 -
-127.0.0.1 - - [22/Jun/2025 01:59:31] "GET /config.js HTTP/1.1" 200 -
-127.0.0.1 - - [22/Jun/2025 01:59:32] "GET /sw.js HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jun/2025 08:08:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jun/2025 08:08:39] "GET /manifest.json HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jun/2025 08:08:39] "GET /css/main.css HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jun/2025 08:08:39] "GET /config.js HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jun/2025 08:08:39] "GET /js/main.js HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jun/2025 08:08:39] "GET /ui_components/loading_screen.html HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jun/2025 08:08:39] "GET /ui_components/settings_menu.html HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jun/2025 08:08:39] "GET /ui_components/training_modal.html HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jun/2025 08:08:39] "GET /sw.js HTTP/1.1" 200 -
