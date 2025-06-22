@@ -297,19 +297,145 @@ def get_training_data():
         'signs_collected': list(set(entry['sign'] for entry in training_data))
     })
 
+@app.route('/training/status', methods=['GET'])
+def training_status():
+    """Get training status and model information"""
+    try:
+        model_info = {
+            'model_available': TRAINED_MODEL is not None,
+            'model_path': 'models/asl_patterns.json',
+            'training_data_available': os.path.exists('training_data/annotations'),
+            'supported_commands': [],
+            'model_details': {}
+        }
+        
+        if TRAINED_MODEL:
+            model_info['model_details'] = {
+                'model_type': TRAINED_MODEL.get('model_type', 'unknown'),
+                'version': TRAINED_MODEL.get('version', '1.0.0'),
+                'trained_commands': TRAINED_MODEL.get('trained_commands', 0),
+                'training_date': TRAINED_MODEL.get('training_date', 'unknown'),
+                'status': TRAINED_MODEL.get('status', 'unknown')
+            }
+            model_info['supported_commands'] = TRAINED_MODEL.get('supported_commands', [])
+        
+        # Check for training data
+        if os.path.exists('training_data/annotations'):
+            try:
+                annotation_files = [f for f in os.listdir('training_data/annotations') if f.endswith('.json')]
+                model_info['annotation_files'] = len(annotation_files)
+            except:
+                model_info['annotation_files'] = 0
+        
+        return jsonify(model_info)
+        
+    except Exception as e:
+        logger.error(f"Training status error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# Load trained ASL model if available
+def load_trained_model():
+    """Load the trained ASL pattern model"""
+    model_path = "models/asl_patterns.json"
+    if os.path.exists(model_path):
+        try:
+            with open(model_path, 'r') as f:
+                model_data = json.load(f)
+            logger.info(f"✅ Loaded trained ASL model: {model_data.get('trained_commands', 0)} commands")
+            return model_data
+        except Exception as e:
+            logger.warning(f"Failed to load trained model: {e}")
+    
+    # Try minimal model in current directory
+    minimal_path = "asl_patterns_minimal.json"
+    if os.path.exists(minimal_path):
+        try:
+            with open(minimal_path, 'r') as f:
+                model_data = json.load(f)
+            logger.info(f"✅ Loaded minimal ASL model: {model_data.get('trained_commands', 0)} commands")
+            return model_data
+        except Exception as e:
+            logger.warning(f"Failed to load minimal model: {e}")
+    
+    logger.info("🔄 No trained model found - using hardcoded patterns")
+    # Return hardcoded patterns if no file available
+    return {
+        'model_type': 'hardcoded_patterns',
+        'version': '1.0.0',
+        'patterns': {
+            'hello': {'gesture': 'wave', 'confidence': 0.9},
+            'help': {'gesture': 'fist_on_palm', 'confidence': 0.8},
+            'stop': {'gesture': 'flat_hand', 'confidence': 0.9},
+            'robot pick up': {'gesture': 'grasp', 'confidence': 0.8},
+            'robot deliver': {'gesture': 'place', 'confidence': 0.8},
+            'lights on': {'gesture': 'up', 'confidence': 0.7},
+            'lights off': {'gesture': 'down', 'confidence': 0.7},
+            'call ava': {'gesture': 'phone', 'confidence': 0.8},
+            'chat ava': {'gesture': 'talk', 'confidence': 0.8},
+            'thank you': {'gesture': 'chin_forward', 'confidence': 0.9}
+        },
+        'trained_commands': 10,
+        'status': 'hardcoded_fallback',
+        'supported_commands': ['hello', 'help', 'stop', 'robot pick up', 'robot deliver', 'lights on', 'lights off', 'call ava', 'chat ava', 'thank you']
+    }
+
+# Load the model at startup
+TRAINED_MODEL = load_trained_model()
+
+def get_asl_confidence(recognized_text):
+    """Get confidence score for ASL recognition using trained model"""
+    if not TRAINED_MODEL or not recognized_text:
+        return 0.5  # Default confidence
+    
+    text_lower = recognized_text.lower().strip()
+    patterns = TRAINED_MODEL.get('patterns', {})
+    
+    # Direct match
+    if text_lower in patterns:
+        return patterns[text_lower].get('confidence', 0.8)
+    
+    # Partial match
+    for pattern_text, pattern_data in patterns.items():
+        if any(word in text_lower for word in pattern_data.get('words', [])):
+            return pattern_data.get('confidence', 0.6) * 0.8  # Reduced for partial match
+    
+    return 0.3  # Low confidence for unrecognized patterns
+
 def process_asl_response(ai_response, image_data):
     """Process AI response to extract and enhance ASL commands"""
     try:
-        # Look for ASL command patterns
+        # Look for ASL command patterns using trained model
         detected_commands = []
         
-        for command, action in ASL_COMMANDS.items():
-            if command.lower() in ai_response.lower():
-                detected_commands.append({
-                    'command': command,
-                    'action': action,
-                    'confidence': 'High' if len(command.split()) > 1 else 'Medium'
-                })
+        # Use trained model patterns if available
+        if TRAINED_MODEL:
+            patterns = TRAINED_MODEL.get('patterns', {})
+            
+            for pattern_text, pattern_data in patterns.items():
+                if pattern_text.lower() in ai_response.lower():
+                    confidence_score = get_asl_confidence(pattern_text)
+                    confidence_level = 'High' if confidence_score > 0.8 else 'Medium' if confidence_score > 0.6 else 'Low'
+                    
+                    # Map to action if available
+                    action = ASL_COMMANDS.get(pattern_text, pattern_data.get('gesture', 'unknown'))
+                    
+                    detected_commands.append({
+                        'command': pattern_text,
+                        'action': action,
+                        'confidence': confidence_level,
+                        'confidence_score': confidence_score,
+                        'gesture': pattern_data.get('gesture', 'unknown')
+                    })
+        else:
+            # Fallback to original mapping
+            for command, action in ASL_COMMANDS.items():
+                if command.lower() in ai_response.lower():
+                    detected_commands.append({
+                        'command': command,
+                        'action': action,
+                        'confidence': 'High' if len(command.split()) > 1 else 'Medium',
+                        'confidence_score': 0.8 if len(command.split()) > 1 else 0.6
+                    })
         
         # Enhance the response with structured ASL data
         enhanced_response = ai_response
@@ -317,7 +443,9 @@ def process_asl_response(ai_response, image_data):
         if detected_commands:
             enhanced_response += "\n\nDETECTED ASL COMMANDS:\n"
             for cmd in detected_commands:
-                enhanced_response += f"SIGN: {cmd['command']} | CONFIDENCE: {cmd['confidence']} | ACTION: {cmd['action']}\n"
+                enhanced_response += f"SIGN: {cmd['command']} | CONFIDENCE: {cmd['confidence']} ({cmd.get('confidence_score', 0):.2f}) | ACTION: {cmd['action']}\n"
+                if 'gesture' in cmd:
+                    enhanced_response += f"GESTURE: {cmd['gesture']}\n"
         
         return enhanced_response
         

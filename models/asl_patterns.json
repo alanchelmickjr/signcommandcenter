@@ -1,0 +1,101 @@
+{
+ "model_type": "asl_pattern_matcher",
+ "version": "1.0.0",
+ "patterns": {
+  "hello": {
+   "words": [
+    "hello"
+   ],
+   "gesture": "wave",
+   "confidence": 0.9
+  },
+  "help": {
+   "words": [
+    "help"
+   ],
+   "gesture": "fist_on_palm",
+   "confidence": 0.8
+  },
+  "robot pick up": {
+   "words": [
+    "robot",
+    "pick",
+    "up"
+   ],
+   "gesture": "grasp",
+   "confidence": 0.85
+  },
+  "robot deliver": {
+   "words": [
+    "robot",
+    "deliver"
+   ],
+   "gesture": "place",
+   "confidence": 0.85
+  },
+  "lights on": {
+   "words": [
+    "lights",
+    "on"
+   ],
+   "gesture": "up",
+   "confidence": 0.8
+  },
+  "lights off": {
+   "words": [
+    "lights",
+    "off"
+   ],
+   "gesture": "down",
+   "confidence": 0.8
+  },
+  "call ava": {
+   "words": [
+    "call",
+    "ava"
+   ],
+   "gesture": "phone",
+   "confidence": 0.8
+  },
+  "chat ava": {
+   "words": [
+    "chat",
+    "ava"
+   ],
+   "gesture": "talk",
+   "confidence": 0.8
+  },
+  "stop": {
+   "words": [
+    "stop"
+   ],
+   "gesture": "flat_hand",
+   "confidence": 0.9
+  },
+  "thank you": {
+   "words": [
+    "thank",
+    "you"
+   ],
+   "gesture": "chin_forward",
+   "confidence": 0.9
+  }
+ },
+ "trained_commands": 10,
+ "training_date": "2025-06-22T01:28:32.920918",
+ "device": "cpu",
+ "status": "ready",
+ "confidence_threshold": 0.7,
+ "supported_commands": [
+  "hello",
+  "help",
+  "robot pick up",
+  "robot deliver",
+  "lights on",
+  "lights off",
+  "call ava",
+  "chat ava",
+  "stop",
+  "thank you"
+ ]
+}

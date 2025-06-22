@@ -114,6 +114,7 @@
             object-fit: cover;
             background-color: #000;
             flex: 3;
+            transform: scaleX(-1); /* Mirror the video horizontally */
         }
 
         .left-pane {
@@ -1424,7 +1425,13 @@ If no clear ASL gesture is visible, respond with "RECOGNIZED_ASL: none"`;
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Since video is mirrored for display, we need to flip it back for training
+            context.save();
+            context.scale(-1, 1); // Flip horizontally
+            context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+            context.restore();
+            
             return canvas.toDataURL('image/jpeg', 0.7);
         }
 

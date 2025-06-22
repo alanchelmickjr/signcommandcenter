@@ -322,6 +322,53 @@ python3 train_asl_model.py
 # (Available through web interface)
 ```
 
+## 🎓 ASL Training System
+
+### Auto-Training on Boot
+The ASL Command Center automatically sets up and trains the recognition model on first boot:
+
+1. **Model Detection**: Checks for existing trained models on startup
+2. **Auto-Training**: If no model exists, triggers training automatically
+3. **Sample Data**: Creates sample training data for immediate demo capability
+4. **MS-ASL Integration**: Uses MS-ASL dataset for foundational training (if available)
+5. **Custom Commands**: Allows training custom signs for specific robot/system commands
+
+### Training Pipeline
+```bash
+# Manual training (optional - happens automatically)
+cd ml_training
+python3 train_asl_model.py
+```
+
+### Supported Training Features
+- **M2 Mac Optimization**: Automatic MPS acceleration detection and optimization
+- **Fast Baseline Training**: Lightweight pattern matching for hackathon demos
+- **Advanced Training**: SmolVLM fine-tuning (when libraries available)
+- **Custom Sign Training**: Train user-defined signs for specific commands
+- **MS-ASL Foundation**: Optional MS-ASL dataset integration for broader vocabulary
+
+### Training Status API
+```bash
+# Check training status and model information
+curl http://localhost:5001/training/status
+
+# Response includes:
+# - Model availability and details
+# - Supported commands list
+# - Training data status
+# - Model performance metrics
+```
+
+### Custom ASL Commands Training
+The system supports training custom ASL signs for these command categories:
+
+- **Greetings**: hello, thank you
+- **System Control**: stop, go, help
+- **Robot Commands**: robot pick up, robot deliver
+- **Smart Home**: lights on, lights off
+- **Vapi/Agent Ava**: call ava, chat ava
+- **Custom Commands**: User-defined signs for specific actions
+
 ## 🆘 Troubleshooting
 
 ### **Common Issues**
@@ -363,14 +410,12 @@ tail -f asl-server.log
 
 ## 🙏 Development Team
 
-**Paul Elite** - UI/UX Wizardry (Figma to Code Designer and Implementer of User Forward Modern Interfaces)  
-*The easy to use pretty face that keeps you coming back - endless creativity and user experiential focus*
-
-**Claude Sonnet 3.5** (Anthropic) - Chief AI Architect  
+**Claude Sonnet 4** (Anthropic) - Chief AI Architect $68
 *The wild horse of innovation - endless creativity and architectural vision*
 
-**GitHub Copilot** - Senior Code Whisperer  
-*The gentle sage - patient pair programming and code refinement*
+**GitHub Copilot** - Senior Code Whisperer  FREE *The gentle sage - patient pair programming and code refinement*
+
+**Gemini 2.5 Pro** (Google) - $5 worth of Planning in Phase 1
 
 **Alan Helmick** - Product Lead & Human Driver  
 *Barely holding the reins but steering toward the dream with determination and joy*
@@ -406,4 +451,45 @@ This project follows the **"accessibility first"** principle. Contributions shou
 ## 📄 License
 
 See [LICENSE](./LICENSE) file for details.
+
+## 🎓 Training Wizard Interface
+
+The ASL Command Center includes a comprehensive training wizard accessible via the graduation cap icon (🎓) in the interface:
+
+### **Camera-Based Training Features**
+- **Real-time ASL capture**: Train custom signs using your camera
+- **Mirrored video feed**: Natural user experience with horizontally flipped display
+- **Auto data collection**: System automatically saves training examples
+- **Progress tracking**: Monitor how many examples collected per sign type
+- **Privacy-first**: All data stays local, nothing uploaded to cloud
+
+### **Training Wizard Components**
+1. **Training Status Dashboard**
+   - Shows current number of collected signs
+   - Displays training progress and accuracy metrics
+   - Goal tracking (50+ examples per sign recommended)
+
+2. **Data Management**
+   - Export training data for backup
+   - Clear data to start fresh
+   - View training statistics and progress
+
+3. **Custom Sign Creation**
+   - Train signs for specific robot commands
+   - Create personalized gesture vocabulary
+   - Support for household automation commands
+
+### **Training Data Collection Process**
+1. Click the graduation cap (🎓) button to open training wizard
+2. System shows current training status and progress
+3. Perform ASL signs in front of camera during recognition
+4. System automatically captures and labels examples
+5. More examples = better recognition accuracy
+
+### **Supported Training Categories**
+- **Robot Control**: pick up, deliver, stop, home
+- **Smart Home**: lights on/off, temperature control
+- **Communication**: call ava, chat ava, help, thank you
+- **Navigation**: go, stop, start, pause
+- **Custom Commands**: User-defined signs for specific needs
 

@@ -28,6 +28,22 @@ mkdir -p models/SmolVLM
 mkdir -p training_data/asl_signs
 mkdir -p training_data/annotations
 
+# Auto-train model if needed
+echo "🎓 Checking for trained ASL model..."
+if [ ! -f "models/asl_patterns.json" ] && [ ! -d "models/smolvlm_asl" ]; then
+    echo "🚀 No model found - triggering auto-training..."
+    cd ml_training
+    if $PYTHON_CMD train_asl_model.py; then
+        echo "✅ Auto-training completed successfully!"
+        cd ..
+    else
+        echo "⚠️  Auto-training failed - system will use default patterns"
+        cd ..
+    fi
+else
+    echo "✅ Trained model found - skipping auto-training"
+fi
+
 # Kill any existing processes first (be specific about llama-server path)
 echo "🧹 Cleaning up any existing processes..."
 pkill -f "python.*asl_server" 2>/dev/null || true
@@ -165,6 +181,21 @@ download_model() {
 
 if [ "$AI_SERVER" = true ]; then
     download_model
+    
+    # Auto-train ASL model if no training exists
+    echo "🎓 Checking ASL model training status..."
+    if [ ! -d "ml_training/asl_model_checkpoints" ] || [ ! -f "ml_training/asl_model_checkpoints/baseline_model.json" ]; then
+        echo "🚀 First boot detected - setting up ASL recognition training..."
+        cd ml_training
+        if $PYTHON_CMD train_asl_model.py; then
+            echo "✅ ASL baseline model created successfully!"
+        else
+            echo "⚠️  ASL training setup had issues, but system will still work"
+        fi
+        cd ..
+    else
+        echo "✅ ASL model training already exists"
+    fi
 fi
 
 # Find available ports
