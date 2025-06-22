@@ -23,7 +23,7 @@ CORS(app)
 
 # Configuration
 LLAMA_SERVER_URL = "http://localhost:8080"
-ROBOT_API_URL = "http://localhost:5000"  # Robot control server
+ROBOT_API_URL = "http://localhost:5001"  # Robot control server
 VAPI_API_KEY = os.getenv('VAPI_API_KEY', 'your-vapi-key')
 VAPI_API_URL = "https://api.vapi.ai/call"
 
@@ -407,11 +407,19 @@ def process_asl_response(ai_response, image_data):
         # Look for ASL command patterns using trained model
         detected_commands = []
         
-        # Use trained model patterns if available
+        # First try simple pattern recognition (always works)
+        simple_signs = simple_pattern_recognition(ai_response)
+        detected_commands.extend(simple_signs)
+        
+        # Use trained model patterns if available (additional detection)
         if TRAINED_MODEL:
             patterns = TRAINED_MODEL.get('patterns', {})
             
             for pattern_text, pattern_data in patterns.items():
+                # Skip if already found by simple recognition
+                if any(cmd.get('sign') == pattern_text for cmd in detected_commands):
+                    continue
+                    
                 if pattern_text.lower() in ai_response.lower():
                     confidence_score = get_asl_confidence(pattern_text)
                     confidence_level = 'High' if confidence_score > 0.8 else 'Medium' if confidence_score > 0.6 else 'Low'
@@ -420,21 +428,11 @@ def process_asl_response(ai_response, image_data):
                     action = ASL_COMMANDS.get(pattern_text, pattern_data.get('gesture', 'unknown'))
                     
                     detected_commands.append({
-                        'command': pattern_text,
+                        'sign': pattern_text,
                         'action': action,
                         'confidence': confidence_level,
                         'confidence_score': confidence_score,
                         'gesture': pattern_data.get('gesture', 'unknown')
-                    })
-        else:
-            # Fallback to original mapping
-            for command, action in ASL_COMMANDS.items():
-                if command.lower() in ai_response.lower():
-                    detected_commands.append({
-                        'command': command,
-                        'action': action,
-                        'confidence': 'High' if len(command.split()) > 1 else 'Medium',
-                        'confidence_score': 0.8 if len(command.split()) > 1 else 0.6
                     })
         
         # Enhance the response with structured ASL data
@@ -443,15 +441,56 @@ def process_asl_response(ai_response, image_data):
         if detected_commands:
             enhanced_response += "\n\nDETECTED ASL COMMANDS:\n"
             for cmd in detected_commands:
-                enhanced_response += f"SIGN: {cmd['command']} | CONFIDENCE: {cmd['confidence']} ({cmd.get('confidence_score', 0):.2f}) | ACTION: {cmd['action']}\n"
+                sign_name = cmd.get('sign', 'unknown')
+                confidence = cmd.get('confidence', 'Medium')
+                action = cmd.get('action', 'unknown')
+                enhanced_response += f"SIGN: {sign_name} | CONFIDENCE: {confidence} | ACTION: {action}\n"
                 if 'gesture' in cmd:
                     enhanced_response += f"GESTURE: {cmd['gesture']}\n"
+                elif 'keyword' in cmd:
+                    enhanced_response += f"KEYWORD: {cmd['keyword']}\n"
+        else:
+            # If no patterns found, at least indicate we're looking for ASL
+            enhanced_response += "\n\nASL RECOGNITION: No clear sign language detected in this frame."
         
         return enhanced_response
         
     except Exception as e:
         logger.error(f"ASL processing error: {str(e)}")
         return ai_response
+
+def simple_pattern_recognition(ai_response):
+    """Simple pattern recognition that works without complex AI"""
+    detected_signs = []
+    response_lower = ai_response.lower()
+    
+    # Simple keyword-based recognition
+    patterns = {
+        'hello': ['wave', 'waving', 'greeting', 'hello'],
+        'stop': ['stop', 'flat hand', 'palm up', 'halt'],
+        'help': ['help', 'fist on palm', 'assistance'],
+        'robot pick up': ['pick up', 'grasp', 'grab', 'lifting'],
+        'robot deliver': ['deliver', 'place', 'putting down'],
+        'thank you': ['thank', 'grateful', 'chin forward'],
+        'lights on': ['lights on', 'turn on', 'illuminate'],
+        'lights off': ['lights off', 'turn off', 'dark'],
+        'call ava': ['call', 'phone', 'telephone'],
+        'chat ava': ['chat', 'talk', 'conversation']
+    }
+    
+    for sign, keywords in patterns.items():
+        for keyword in keywords:
+            if keyword in response_lower:
+                confidence = 'High' if len(keyword) > 4 else 'Medium'
+                detected_signs.append({
+                    'sign': sign,
+                    'confidence': confidence,
+                    'keyword': keyword,
+                    'action': ASL_COMMANDS.get(sign, 'unknown')
+                })
+                break  # Only add each sign once
+    
+    return detected_signs
 
 def check_llama_server():
     """Check if llama.cpp server is running"""
@@ -485,12 +524,12 @@ def make_vapi_call(phone_number=None, message="Hello, this is an ASL Command Cen
         call_data = {
             'assistant': {
                 'model': {
-                    'provider': 'openai',
-                    'model': 'gpt-3.5-turbo',
+                    'provider': 'anthropic',
+                    'model': 'claude-sonnet-4-preview',
                     'messages': [
                         {
                             'role': 'system',
-                            'content': 'You are a helpful assistant for ASL Command Center. You can help with general questions and support.'
+                            'content': 'You are Agent Ava, a highly intelligent assistant for ASL Command Center built for Berkeley Cal Hacks 2025. You understand and deeply support the deaf and hard-of-hearing community. You provide clear, helpful responses and can assist with accessibility needs, technology questions, robot control, smart home automation, and general support. You are powered by Claude Sonnet 4, the most advanced and capable model available for this critical accessibility work.'
                         }
                     ]
                 },
@@ -523,14 +562,79 @@ def make_vapi_call(phone_number=None, message="Hello, this is an ASL Command Cen
         logger.error(f"Error making Vapi call: {str(e)}")
         return {'success': False, 'error': str(e)}
 
+@app.route('/test_recognition', methods=['GET'])
+def test_recognition():
+    """Test endpoint to verify ASL recognition is working"""
+    try:
+        test_responses = [
+            "I see a person waving their hand hello",
+            "The person is making a stop gesture with flat hand raised",
+            "I observe a grasping motion that looks like pick up",
+            "The hand is moving to the chin and forward, looks like thank you"
+        ]
+        
+        results = []
+        for test_response in test_responses:
+            processed = process_asl_response(test_response, None)
+            if "DETECTED ASL COMMANDS:" in processed:
+                # Extract the detected commands
+                lines = processed.split('\n')
+                for line in lines:
+                    if line.startswith('SIGN:'):
+                        results.append({
+                            'input': test_response,
+                            'detected': line,
+                            'working': True
+                        })
+                        break
+            else:
+                results.append({
+                    'input': test_response,
+                    'detected': 'No sign detected',
+                    'working': False
+                })
+        
+        working_count = sum(1 for r in results if r['working'])
+        
+        return jsonify({
+            'status': 'test_complete',
+            'total_tests': len(test_responses),
+            'working_tests': working_count,
+            'success_rate': f"{(working_count/len(test_responses)*100):.1f}%",
+            'results': results,
+            'ready_for_demo': working_count >= 2
+        })
+        
+    except Exception as e:
+        logger.error(f"Test recognition error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     logger.info("Starting ASL Recognition Server for Berkeley Cal Hacks 2025")
     logger.info(f"Llama server: {LLAMA_SERVER_URL}")
     logger.info(f"Robot API: {ROBOT_API_URL}")
     logger.info(f"ASL commands loaded: {len(ASL_COMMANDS)}")
     
-    # Get port from environment variable or default to 5000
-    port = int(os.getenv('ASL_SERVER_PORT', 5000))
+    # Use port 5001 to avoid macOS AirPlay conflicts on port 5000
+    port = int(os.getenv('ASL_SERVER_PORT', 5001))
     logger.info(f"Starting ASL server on port {port}")
+    
+    # Test basic pattern recognition
+    print("🧪 Testing ASL recognition patterns...")
+    test_responses = [
+        "I see a hand waving, this looks like hello",
+        "The person is making a stop gesture with flat hand",
+        "I observe a grasping motion, possibly pick up"
+    ]
+    
+    for test_response in test_responses:
+        result = process_asl_response(test_response, None)
+        if "DETECTED ASL COMMANDS:" in result:
+            print(f"  ✅ Pattern recognition working: {test_response[:30]}...")
+        else:
+            print(f"  ⚠️  No patterns detected in: {test_response[:30]}...")
+    
+    print(f"🤟 Model Status: {TRAINED_MODEL.get('status', 'unknown') if TRAINED_MODEL else 'no model'}")
+    print(f"🚀 ASL server ready on port {port}")
     
     app.run(host='0.0.0.0', port=port, debug=False)

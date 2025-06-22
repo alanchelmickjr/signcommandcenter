@@ -40,7 +40,7 @@ let aslServerAvailable = false;
 
 // Dynamic server URLs based on configuration
 const AI_SERVER_URL = window.ASL_CONFIG?.AI_SERVER_URL || 'http://localhost:8080';
-const ASL_SERVER_URL = window.ASL_CONFIG?.ASL_SERVER_URL || 'http://localhost:5000';
+const ASL_SERVER_URL = window.ASL_CONFIG?.ASL_SERVER_URL || 'http://localhost:5001';
 
 console.log('Using dynamic server URLs:', { AI_SERVER_URL, ASL_SERVER_URL });
 
