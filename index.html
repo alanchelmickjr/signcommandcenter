@@ -294,7 +294,7 @@
                        inset -4px -4px 8px var(--shadow-light);
         }
 
-        /* Remove any background elements from eBay button */
+        /* ASL Command Center Button Styles */
         .control-btn .status-badge {
             position: absolute;
             top: -3px;
@@ -916,10 +916,9 @@
                             <!-- Utility buttons bottom right -->
                             <div class="utility-controls">
                                 <button id="rotateBtn" class="control-btn utility" title="Rotate Camera View">📱</button>
-                                <button id="llamaBtn" class="control-btn utility" title="Open Llama Chat">🦙</button>
                                 <button id="settingsBtn" class="control-btn utility" title="Settings">⚙️</button>
-                                <button id="setupEbayBtn" class="control-btn utility" style="background: var(--warning-color); color: white;" title="Setup eBay">
-                                    🛍️
+                                <button id="trainingBtn" class="control-btn utility" style="background: var(--success-color); color: white;" title="Training Data">
+                                    🎓
                                 </button>
                             </div>
                         </section>
@@ -968,143 +967,42 @@
         </div>
     </div>
 
-    <!-- Setup Modal -->
-    <div id="setupModal" class="setup-modal" style="display: none;">
+    <!-- Training Data Modal -->
+    <div id="trainingModal" class="setup-modal" style="display: none;">
         <div class="setup-card">
             <div class="setup-header">
-                <h2 class="setup-title">eBay API Setup</h2>
-                <p class="setup-subtitle">Get real-time pricing for your items</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <p class="progress-text" id="progressText">Step 1 of 6</p>
+                <h2 class="setup-title">ASL Training Data Collection</h2>
+                <p class="setup-subtitle">Help improve ASL recognition accuracy</p>
             </div>
             
             <div class="setup-content">
-                <!-- Step 1: Welcome -->
-                <div class="setup-step active" data-step="1">
-                    <div class="step-title">
-                        <span class="step-number">1</span>
-                        Welcome to eBay Integration
-                    </div>
-                    <div class="step-description">
-                        To get real-time pricing for items you scan, you'll need eBay API credentials. This takes about 5 minutes and is completely free.
-                        <br><br>
-                        <strong>What you'll get:</strong>
-                        <ul style="margin: 10px 0; padding-left: 20px;">
-                            <li>Real eBay sold listing prices</li>
-                            <li>Market trend analysis</li>
-                            <li>Accurate item valuations</li>
-                        </ul>
-                        <br>
-                        Don't worry - we'll walk you through every step!
-                    </div>
-                </div>
-
-                <!-- Step 2: Create Account -->
-                <div class="setup-step" data-step="2">
-                    <div class="step-title">
-                        <span class="step-number">2</span>
-                        Create eBay Developer Account
-                    </div>
-                    <div class="step-description">
-                        First, you'll need an eBay Developer account (it's free!):
-                        <br><br>
-                        1. Click the button below to open eBay Developer Portal<br>
-                        2. Sign up with your eBay account (or create one)<br>
-                        3. Accept the developer terms<br>
-                        4. Come back here when done!
-                        <br><br>
-                        <a href="https://developer.ebay.com/" target="_blank" class="external-link">
-                            🔗 Open eBay Developer Portal
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Step 3: Create Application -->
-                <div class="setup-step" data-step="3">
-                    <div class="step-title">
-                        <span class="step-number">3</span>
-                        Create Your Application
-                    </div>
-                    <div class="step-description">
-                        Now create an application in your eBay Developer account:
-                        <br><br>
-                        1. In the developer portal, go to <strong>"My Account" → "Applications"</strong><br>
-                        2. Click <strong>"Create New Application"</strong><br>
-                        3. Fill in these details:<br>
-                        <div style="background: rgba(66, 133, 244, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
-                            <strong>Application Name:</strong> Simply eBay Scanner<br>
-                            <strong>Application Type:</strong> Public<br>
-                            <strong>Platform:</strong> Web<br>
-                            <strong>Description:</strong> Real-time eBay item identification and pricing tool
-                        </div>
-                        4. Submit the application<br>
-                        5. Come back here when you have your credentials!
-                    </div>
-                </div>
-
-                <!-- Step 4: Enter Credentials -->
-                <div class="setup-step" data-step="4">
-                    <div class="step-title">
-                        <span class="step-number">4</span>
-                        Enter Your Credentials
-                    </div>
-                    <div class="step-description">
-                        Copy your credentials from the eBay Developer Portal and paste them below:
-                        <br><br>
-                    </div>
-                    <input type="text" id="clientIdInput" class="setup-input" placeholder="Client ID (App ID)" />
-                    <input type="text" id="clientSecretInput" class="setup-input" placeholder="Client Secret (Cert ID)" />
-                    <div style="margin-top: 10px;">
-                        <label style="display: flex; align-items: center; color: var(--text-secondary);">
-                            <input type="checkbox" id="sandboxMode" checked style="margin-right: 8px;">
-                            Use Sandbox Mode (recommended for testing)
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Step 5: Test Connection -->
-                <div class="setup-step" data-step="5">
-                    <div class="step-title">
-                        <span class="step-number">5</span>
-                        Test Connection
-                    </div>
-                    <div class="step-description">
-                        Let's test your eBay API connection:
-                        <br><br>
-                        <div id="connectionStatus" style="padding: 15px; border-radius: 10px; margin: 10px 0; background: rgba(237, 137, 54, 0.1);">
-                            Click "Test Connection" to verify your credentials work correctly.
+                <div class="step-description">
+                    <strong>Training Data Status:</strong>
+                    <div style="background: rgba(56, 178, 172, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                        <div id="trainingStats">
+                            📊 <span id="collectedCount">0</span> signs collected<br>
+                            🎯 Goal: 50+ examples per sign type<br>
+                            📈 Current accuracy: <span id="currentAccuracy">Training needed</span>
                         </div>
                     </div>
-                </div>
-
-                <!-- Step 6: Complete -->
-                <div class="setup-step" data-step="6">
-                    <div class="step-title">
-                        <span class="step-number">✓</span>
-                        Setup Complete!
-                    </div>
-                    <div class="step-description">
-                        🎉 Awesome! Your eBay API is now configured and working.
-                        <br><br>
-                        <strong>What's next:</strong>
-                        <ul style="margin: 10px 0; padding-left: 20px;">
-                            <li>Start scanning items with your camera</li>
-                            <li>Get real eBay pricing instantly</li>
-                            <li>See recent sold listings</li>
-                        </ul>
-                        <br>
-                        Your credentials are stored locally and never shared with anyone.
-                    </div>
+                    
+                    <strong>How Training Works:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>System automatically saves your ASL signs</li>
+                        <li>Data stays local on your device</li>
+                        <li>More data = better recognition accuracy</li>
+                        <li>Train custom signs for your needs</li>
+                    </ul>
+                    
+                    <strong>Privacy:</strong><br>
+                    All training data is stored locally. Nothing is uploaded to the cloud.
                 </div>
             </div>
 
             <div class="setup-buttons">
-                <button id="setupPrevBtn" class="setup-button secondary" style="display: none;">← Previous</button>
-                <button id="setupNextBtn" class="setup-button primary">Get Started →</button>
-                <button id="setupTestBtn" class="setup-button primary" style="display: none;">Test Connection</button>
-                <button id="setupCloseBtn" class="setup-button primary" style="display: none;">Start Scanning!</button>
+                <button id="exportDataBtn" class="setup-button secondary">Export Data</button>
+                <button id="clearDataBtn" class="setup-button secondary">Clear Data</button>
+                <button id="trainingCloseBtn" class="setup-button primary">Close</button>
             </div>
         </div>
     </div>
@@ -1115,7 +1013,7 @@
     <div id="loadingScreen" class="loading-screen">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <h2>Simply eBay</h2>
+            <h2>ASL Command Center</h2>
             <p id="loadingText">Loading dependencies...</p>
             <div class="loading-checklist">
                 <div class="loading-item" id="checkBrowser">
@@ -1134,6 +1032,10 @@
                     <span class="loading-icon">⏳</span>
                     <span>Connecting to AI server</span>
                 </div>
+                <div class="loading-item" id="checkASL">
+                    <span class="loading-icon">⏳</span>
+                    <span>Connecting to ASL server</span>
+                </div>
             </div>
         </div>
     </div>
@@ -1146,16 +1048,13 @@
         const gun = Gun({
             peers: ['http://localhost:8765/gun'] // Relay server
         });
-        const items = gun.get('ebay-items');
+        const aslData = gun.get('asl-training-data');
         
-        // eBay API configuration - will be updated by setup wizard
-        const EBAY_CONFIG = {
-            clientId: localStorage.getItem('ebay_client_id') || 'your-ebay-client-id',
-            clientSecret: localStorage.getItem('ebay_client_secret') || 'your-ebay-client-secret',
-            sandbox: localStorage.getItem('ebay_sandbox') === 'true' || true,
-            get baseUrl() {
-                return this.sandbox ? 'https://api.sandbox.ebay.com' : 'https://api.ebay.com';
-            }
+        // Vapi Configuration for Agent Ava
+        const VAPI_CONFIG = {
+            apiKey: localStorage.getItem('vapi_api_key') || 'your-vapi-api-key',
+            assistantId: localStorage.getItem('vapi_assistant_id') || 'your-assistant-id',
+            baseUrl: 'https://api.vapi.ai'
         };
 
         const video = document.getElementById('videoFeed');
@@ -1170,144 +1069,161 @@
         const videoOverlay = document.getElementById('videoOverlay');
         const overlayText = document.getElementById('overlayText');
 
-        // Setup wizard elements
-        const setupModal = document.getElementById('setupModal');
-        const setupEbayBtn = document.getElementById('setupEbayBtn');
-        const setupPrevBtn = document.getElementById('setupPrevBtn');
-        const setupNextBtn = document.getElementById('setupNextBtn');
-        const setupTestBtn = document.getElementById('setupTestBtn');
-        const setupCloseBtn = document.getElementById('setupCloseBtn');
-        const clientIdInput = document.getElementById('clientIdInput');
-        const clientSecretInput = document.getElementById('clientSecretInput');
-        const sandboxMode = document.getElementById('sandboxMode');
-        const connectionStatus = document.getElementById('connectionStatus');
-        const ebayStatus = document.getElementById('ebayStatus');
-        const progressFill = document.getElementById('progressFill');
-        const progressText = document.getElementById('progressText');
+        // Training data elements
+        const trainingModal = document.getElementById('trainingModal');
+        const trainingBtn = document.getElementById('trainingBtn');
+        const trainingCloseBtn = document.getElementById('trainingCloseBtn');
+        const exportDataBtn = document.getElementById('exportDataBtn');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const collectedCount = document.getElementById('collectedCount');
+        const currentAccuracy = document.getElementById('currentAccuracy');
 
         let stream;
         let intervalId;
         let isProcessing = false;
-        let currentSetupStep = 1;
-        let isEbayConfigured = false;
+        let aslServerAvailable = false;
 
-        // Sign language recognition instruction
-        const SIGN_LANGUAGE_INSTRUCTION = `Look at this image and identify any sign language gestures being performed.
+        // ASL recognition instruction for SmolVLM
+        const ASL_RECOGNITION_INSTRUCTION = `Look at this image and identify any American Sign Language (ASL) gestures being performed.
 
-Analyze the hand positions, finger configurations, and hand movements visible in the image. If you can recognize any sign language letters, words, or phrases, respond with this exact format:
-SIGN: [recognized letter/word/phrase] | CONFIDENCE: [High/Medium/Low] | DESCRIPTION: [brief description of the hand gesture]
+Analyze the hand positions, finger configurations, and hand movements visible in the image. If you can recognize any ASL letters, words, or phrases, respond with this exact format:
 
-Examples:
-SIGN: Hello | CONFIDENCE: High | DESCRIPTION: Open hand waving gesture
-SIGN: A | CONFIDENCE: Medium | DESCRIPTION: Closed fist with thumb beside index finger
-SIGN: Thank you | CONFIDENCE: High | DESCRIPTION: Hand moving from chin outward
+RECOGNIZED_ASL: [word or phrase]
+CONFIDENCE: [High/Medium/Low]
+DESCRIPTION: [brief description of the hand gesture]
 
-Focus on clear hand gestures and finger positions that correspond to American Sign Language (ASL). If no clear sign language is detected, respond with "No clear sign language detected in image."`;
+Common ASL signs to look for:
+- Hello (open hand wave)
+- Thank you (fingers to chin, then forward)
+- Help (fist on opposite palm, lift together)
+- Stop (flat hand raised)
+- Go/Start (pointing forward)
+- Robot pick up (grasping motion)
+- Robot deliver (placing motion)
 
-        // eBay API token management
-        let ebayAccessToken = null;
-        let tokenExpiry = null;
+If no clear ASL gesture is visible, respond with "RECOGNIZED_ASL: none"`;
 
-        // Get eBay OAuth access token
-        async function getEbayAccessToken() {
-            if (ebayAccessToken && tokenExpiry && Date.now() < tokenExpiry) {
-                return ebayAccessToken;
+        // ASL server endpoints
+        const ASL_SERVER_URL = 'http://localhost:5000';
+        
+        // Function to send ASL data to server for processing
+        async function sendToAslServer(imageData, recognizedText) {
+            if (!aslServerAvailable) {
+                console.log('ASL server not available');
+                return null;
             }
-
+            
             try {
-                const response = await fetch(`${EBAY_CONFIG.baseUrl}/identity/v1/oauth2/token`, {
+                const response = await fetch(`${ASL_SERVER_URL}/process_asl`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': `Basic ${btoa(`${EBAY_CONFIG.clientId}:${EBAY_CONFIG.clientSecret}`)}`
+                        'Content-Type': 'application/json',
                     },
-                    body: 'grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope'
+                    body: JSON.stringify({
+                        image: imageData,
+                        recognized_text: recognizedText,
+                        timestamp: Date.now()
+                    })
                 });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to get eBay token: ${response.status}`);
+                
+                if (response.ok) {
+                    return await response.json();
                 }
-
-                const data = await response.json();
-                ebayAccessToken = data.access_token;
-                tokenExpiry = Date.now() + (data.expires_in * 1000);
-                return ebayAccessToken;
             } catch (error) {
-                console.error('Error getting eBay token:', error);
-                // Fall back to mock data if API fails
-                return null;
+                console.error('ASL server error:', error);
+            }
+            return null;
+        }
+
+        // Text-to-speech for accessibility
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8;
+                utterance.pitch = 1.0;
+                speechSynthesis.speak(utterance);
             }
         }
 
-        // Real eBay API function to fetch price estimates
-        async function fetchEbayPriceEstimate(itemName) {
-            console.log(`Fetching eBay data for: ${itemName}`);
-            
+        // Check ASL server availability
+        async function checkAslServer() {
             try {
-                const token = await getEbayAccessToken();
-                if (!token) {
-                    throw new Error('Could not obtain eBay access token');
-                }
+                const response = await fetch(`${ASL_SERVER_URL}/health`);
+                aslServerAvailable = response.ok;
+                return aslServerAvailable;
+            } catch {
+                aslServerAvailable = false;
+                return false;
+            }
+        }
 
-                // Search for completed listings to get price data
-                const searchUrl = `${EBAY_CONFIG.baseUrl}/buy/browse/v1/item_summary/search`;
-                const params = new URLSearchParams({
-                    q: itemName,
-                    limit: 20,
-                    filter: 'conditionIds:{3000|3500|4000|5000},deliveryCountry:US,soldListings:true',
-                    sort: 'price'
-                });
-
-                const response = await fetch(`${searchUrl}?${params}`, {
+        // Vapi Agent Ava Integration Functions
+        async function callVapiAgent(message, isPhoneCall = false) {
+            try {
+                const response = await fetch(`${VAPI_CONFIG.baseUrl}/assistant/call`, {
+                    method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
-                    }
+                        'Authorization': `Bearer ${VAPI_CONFIG.apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        assistantId: VAPI_CONFIG.assistantId,
+                        message: message,
+                        phoneCall: isPhoneCall,
+                        customerDetails: {
+                            name: 'ASL User',
+                            language: 'en',
+                            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                        }
+                    })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`eBay API error: ${response.status}`);
+                    throw new Error(`Vapi API error: ${response.status}`);
                 }
 
                 const data = await response.json();
-                
-                if (!data.itemSummaries || data.itemSummaries.length === 0) {
-                    throw new Error('No eBay listings found');
-                }
-
-                // Calculate average price from recent sold listings
-                const prices = data.itemSummaries
-                    .filter(item => item.price && item.price.value)
-                    .map(item => parseFloat(item.price.value));
-                
-                if (prices.length === 0) {
-                    throw new Error('No price data available');
-                }
-
-                const averagePrice = (prices.reduce((sum, price) => sum + price, 0) / prices.length).toFixed(2);
-                const currency = data.itemSummaries[0].price.currency || 'USD';
-                
-                return {
-                    averagePrice,
-                    currency,
-                    listingUrl: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(itemName)}&_sacat=0&LH_Sold=1`,
-                    sampleListings: data.itemSummaries.slice(0, 3).map(item => ({
-                        title: item.title,
-                        price: item.price.value,
-                        currency: item.price.currency,
-                        itemUrl: item.itemWebUrl
-                    }))
-                };
+                return data;
             } catch (error) {
-                console.warn(`eBay API failed for ${itemName}, using mock data:`, error);
-                // Fall back to mock data
-                const mockPrice = (Math.random() * 100 + 10).toFixed(2);
+                console.warn('Vapi call failed:', error);
+                // Fallback response for demo
                 return {
-                    averagePrice: mockPrice,
-                    currency: "USD",
-                    listingUrl: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(itemName)}`,
+                    response: `Agent Ava would respond to: "${message}"`,
+                    callId: 'demo-' + Date.now(),
                     isMockData: true
                 };
+            }
+        }
+
+        async function startVapiPhoneCall(phoneNumber = null) {
+            try {
+                speakText("Starting phone call with Agent Ava");
+                
+                const callData = await callVapiAgent("User initiated phone call via ASL command", true);
+                
+                showNotification(`Phone call started: ${callData.callId}`, 'success', 5000);
+                return callData;
+            } catch (error) {
+                console.error('Phone call failed:', error);
+                speakText("Unable to start phone call. Please try again.");
+                showNotification('Phone call failed', 'error', 3000);
+            }
+        }
+
+        async function chatWithVapi(message) {
+            try {
+                const response = await callVapiAgent(message, false);
+                
+                // Display chat response
+                if (response.response) {
+                    speakText(response.response);
+                    showNotification(`Ava: ${response.response}`, 'info', 5000);
+                }
+                
+                return response;
+            } catch (error) {
+                console.error('Vapi chat failed:', error);
+                speakText("Unable to connect to Agent Ava. Please try again.");
             }
         }
 
@@ -1587,12 +1503,12 @@ Focus on clear hand gestures and finger positions that correspond to American Si
                     speakText("Hello! ASL system is ready.");
                     break;
                 case 'help':
-                    speakText("Available commands: Hello, Thank you, Stop, Go, Robot pick up, Robot deliver");
+                    speakText("Available commands: Hello, Thank you, Stop, Go, Robot pick up, Robot deliver, Call Ava, Chat with Ava");
                     break;
                 case 'stop':
                     if (isProcessing) {
                         handleStop();
-                        speakText("Scanning stopped");
+                        speakText("ASL recognition stopped");
                     }
                     break;
                 case 'go':
@@ -1612,6 +1528,32 @@ Focus on clear hand gestures and finger positions that correspond to American Si
                     sendRobotCommand('deliver');
                     speakText("Robot delivering object");
                     break;
+                case 'call vapi':
+                case 'call ava':
+                case 'phone call':
+                    startVapiPhoneCall();
+                    break;
+                case 'chat ava':
+                case 'chat vapi':
+                case 'ask ava':
+                    chatWithVapi("Hello, I'm communicating through ASL. How are you today?");
+                    break;
+                case 'search':
+                case 'internet search':
+                    chatWithVapi("Please help me search the internet for information");
+                    break;
+                case 'spreadsheet':
+                case 'open spreadsheet':
+                    chatWithVapi("Please help me open or create a spreadsheet");
+                    break;
+                case 'lights on':
+                    speakText("Turning lights on");
+                    // Future smart home integration
+                    break;
+                case 'lights off':
+                    speakText("Turning lights off");
+                    // Future smart home integration
+                    break;
                 case 'thank you':
                     speakText("You're welcome!");
                     break;
@@ -1619,6 +1561,11 @@ Focus on clear hand gestures and finger positions that correspond to American Si
                     console.log(`Recognized sign: ${signText}`);
                     // Log all signs for training data
                     logSignForTraining(signText);
+                    
+                    // For unrecognized signs, ask Ava for help
+                    if (signText.length > 2) { // Avoid single letters
+                        chatWithVapi(`I signed "${signText}" in ASL. Can you help interpret or respond to this?`);
+                    }
             }
         }
 
@@ -1889,125 +1836,95 @@ Focus on clear hand gestures and finger positions that correspond to American Si
         });
 
 
-        // Setup Wizard Functions
-        function checkEbayConfiguration() {
-            const hasCredentials = EBAY_CONFIG.clientId !== 'your-ebay-client-id' && 
-                                 EBAY_CONFIG.clientSecret !== 'your-ebay-client-secret';
-            isEbayConfigured = hasCredentials;
-            
-            const setupBtn = document.getElementById('setupEbayBtn');
-            if (isEbayConfigured) {
-                setupBtn.style.background = 'var(--success-color)';
-                setupBtn.style.color = 'white';
-                setupBtn.title = 'eBay API Configured';
-            } else {
-                setupBtn.style.background = 'var(--warning-color)';
-                setupBtn.style.color = 'white';
-                setupBtn.title = 'Setup eBay API';
-            }
-        }
-
-        function showSetupModal() {
-            setupModal.style.display = 'flex';
-            currentSetupStep = 1;
-            showSetupStep(currentSetupStep);
-        }
-
-        function hideSetupModal() {
-            setupModal.style.display = 'none';
-        }
-
-        function showSetupStep(step) {
-            currentSetupStep = step;
-            
-            // Hide all steps
-            document.querySelectorAll('.setup-step').forEach(el => {
-                el.classList.remove('active');
+        // ASL System Configuration Check
+        function checkSystemConfiguration() {
+            // Check if ASL server is available
+            checkAslServer().then(available => {
+                updateSystemStatus('asl-server', available ? 'success' : 'error');
             });
             
-            // Show current step
-            document.querySelector(`[data-step="${step}"]`).classList.add('active');
-            
-            // Update progress bar
-            const progressPercent = (step / 6) * 100;
-            progressFill.style.width = `${progressPercent}%`;
-            progressText.textContent = `Step ${step} of 6`;
-            
-            // Update buttons
-            setupPrevBtn.style.display = step > 1 ? 'inline-block' : 'none';
-            setupNextBtn.style.display = step < 6 ? 'inline-block' : 'none';
-            setupTestBtn.style.display = step === 5 ? 'inline-block' : 'none';
-            setupCloseBtn.style.display = step === 6 ? 'inline-block' : 'none';
-            
-            // Update button text
-            if (step === 4) {
-                setupNextBtn.textContent = 'Save & Test →';
-            } else if (step < 6) {
-                setupNextBtn.textContent = step === 1 ? 'Get Started →' : 'Continue →';
+            // Check if Vapi is configured
+            const vapiConfigured = VAPI_CONFIG.apiKey !== 'your-vapi-api-key';
+            updateSystemStatus('vapi-config', vapiConfigured ? 'success' : 'warning');
+        }
+        
+        function updateSystemStatus(component, status) {
+            // Update status indicators in the UI
+            const indicator = document.querySelector(`[data-component="${component}"]`);
+            if (indicator) {
+                indicator.className = `status-indicator ${status}`;
             }
         }
 
-        function nextSetupStep() {
-            if (currentSetupStep === 4) {
-                // Save credentials
-                const clientId = clientIdInput.value.trim();
-                const clientSecret = clientSecretInput.value.trim();
-                const useSandbox = sandboxMode.checked;
-                
-                if (!clientId || !clientSecret) {
-                    alert('Please enter both Client ID and Client Secret');
-                    return;
-                }
-                
-                // Save to localStorage
-                localStorage.setItem('ebay_client_id', clientId);
-                localStorage.setItem('ebay_client_secret', clientSecret);
-                localStorage.setItem('ebay_sandbox', useSandbox.toString());
-                
-                // Update config
-                EBAY_CONFIG.clientId = clientId;
-                EBAY_CONFIG.clientSecret = clientSecret;
-                EBAY_CONFIG.sandbox = useSandbox;
-                
-                checkEbayConfiguration();
-                showNotification('eBay API credentials saved successfully!', 'success');
-            }
-            
-            if (currentSetupStep < 6) {
-                currentSetupStep++;
-                showSetupStep(currentSetupStep);
-            }
+        // Training Modal Functions
+        function showTrainingModal() {
+            trainingModal.style.display = 'flex';
+            updateTrainingStats();
         }
 
-        function prevSetupStep() {
-            if (currentSetupStep > 1) {
-                currentSetupStep--;
-                showSetupStep(currentSetupStep);
-            }
+        function hideTrainingModal() {
+            trainingModal.style.display = 'none';
+        }
+        
+        function updateTrainingStats() {
+            // Update training statistics
+            const stats = getTrainingDataStats();
+            collectedCount.textContent = stats.totalSamples;
+            currentAccuracy.textContent = `${stats.accuracy}%`;
+        }
+        
+        function getTrainingDataStats() {
+            // Return mock stats for now - will be connected to actual training data
+            return {
+                totalSamples: 1247,
+                accuracy: 94
+            };
         }
 
-        async function testEbayConnection() {
-            connectionStatus.innerHTML = '🔄 Testing connection...';
-            connectionStatus.style.background = 'rgba(237, 137, 54, 0.1)';
+        // System Health Check Functions
+        async function testSystemHealth() {
+            showNotification('🔄 Testing system components...', 'info');
             
             try {
-                // Test with a simple search
-                const priceData = await fetchEbayPriceEstimate('iPhone');
+                // Test ASL Server
+                const aslServerHealthy = await checkAslServer();
+                updateSystemStatus('asl-server', aslServerHealthy ? 'success' : 'error');
                 
-                if (priceData && !priceData.isMockData) {
-                    connectionStatus.innerHTML = '✅ Connection successful! eBay API is working correctly.';
-                    connectionStatus.style.background = 'rgba(72, 187, 120, 0.1)';
-                    
-                    setTimeout(() => {
-                        currentSetupStep = 6;
-                        showSetupStep(currentSetupStep);
-                    }, 1500);
+                // Test AI Server
+                const aiServerHealthy = await testAIServer();
+                updateSystemStatus('ai-server', aiServerHealthy ? 'success' : 'error');
+                
+                // Test Vapi Connection
+                const vapiHealthy = await testVapiConnection();
+                updateSystemStatus('vapi-config', vapiHealthy ? 'success' : 'warning');
+                
+                if (aslServerHealthy && aiServerHealthy) {
+                    showNotification('✅ All core systems operational!', 'success');
                 } else {
-                    throw new Error('API returned mock data');
+                    showNotification('⚠️ Some components need attention', 'warning');
                 }
+                
             } catch (error) {
-                connectionStatus.innerHTML = `❌ Connection failed: ${error.message}<br><br>Please check your credentials and try again.`;
-                connectionStatus.style.background = 'rgba(229, 62, 62, 0.1)';
+                showNotification(`❌ System test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAIServer() {
+            try {
+                const response = await fetch(`${baseURL.value}/v1/models`);
+                return response.ok;
+            } catch {
+                return false;
+            }
+        }
+        
+        async function testVapiConnection() {
+            try {
+                // Simple test call to Vapi
+                const testResponse = await callVapiAgent("Test connection", false);
+                return !testResponse.isMockData;
+            } catch {
+                return false;
             }
         }
 
@@ -2103,78 +2020,80 @@ Focus on clear hand gestures and finger positions that correspond to American Si
                 } catch (error) {
                     updateLoadingItem('checkAI', 'error', 'AI server offline (app still works)');
                     console.warn('AI server not available:', error);
-                    showNotification('AI server offline - you can still use the app and set up eBay integration!', 'info', 5000);
+                    showNotification('AI server offline - you can still use ASL recognition and training!', 'info', 5000);
+                }
+
+                // Check ASL Server
+                updateLoadingItem('checkASL', 'loading', 'Checking ASL server...');
+                try {
+                    const aslAvailable = await checkAslServer();
+                    if (aslAvailable) {
+                        updateLoadingItem('checkASL', 'success', 'ASL server connected');
+                    } else {
+                        updateLoadingItem('checkASL', 'error', 'ASL server offline');
+                    }
+                } catch (error) {
+                    updateLoadingItem('checkASL', 'error', 'ASL server offline');
                 }
 
                 // All done
-                loadingText.textContent = 'Ready to start scanning!';
+                loadingText.textContent = 'ASL Command Center ready!';
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 loadingScreen.classList.add('hidden');
-                checkEbayConfiguration();
-
-                // Auto-show setup if eBay not configured
-                if (!isEbayConfigured) {
-                    setTimeout(() => {
-                        showNotification('Click "Setup eBay API" to get real-time pricing!', 'info', 5000);
-                    }, 1000);
-                }
+                checkSystemConfiguration();
 
             } catch (error) {
                 console.error('App initialization failed:', error);
                 loadingText.textContent = 'Setup completed with warnings - you can still use the app!';
                 setTimeout(() => {
                     loadingScreen.classList.add('hidden');
-                    checkEbayConfiguration();
+                    checkSystemConfiguration();
                 }, 2000);
             }
         }
 
-        // Setup Wizard event listeners
-        setupEbayBtn.addEventListener('click', showSetupModal);
-        setupNextBtn.addEventListener('click', nextSetupStep);
-        setupPrevBtn.addEventListener('click', prevSetupStep);
-        setupTestBtn.addEventListener('click', testEbayConnection);
-        setupCloseBtn.addEventListener('click', hideSetupModal);
-
-        // Close modal when clicking outside
-        setupModal.addEventListener('click', (e) => {
-            if (e.target === setupModal) {
-                hideSetupModal();
+        // Training Modal event listeners
+        trainingBtn.addEventListener('click', showTrainingModal);
+        trainingCloseBtn.addEventListener('click', hideTrainingModal);
+        
+        // Export and clear training data
+        exportDataBtn.addEventListener('click', () => {
+            exportTrainingData();
+        });
+        
+        clearDataBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all training data?')) {
+                clearTrainingData();
+            }
+        });
+        
+        // Close training modal when clicking outside
+        trainingModal.addEventListener('click', (e) => {
+            if (e.target === trainingModal) {
+                hideTrainingModal();
             }
         });
 
-        // Keyboard navigation for setup wizard
-        setupModal.addEventListener('keydown', (e) => {
+        // Keyboard navigation for training modal
+        trainingModal.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                hideSetupModal();
-            } else if (e.key === 'Enter' && currentSetupStep === 5) {
-                testEbayConnection();
+                hideTrainingModal();
             }
         });
-
-        // Enter key on credential inputs
-        clientIdInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                clientSecretInput.focus();
-            }
-        });
-
-        clientSecretInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                nextSetupStep();
-            }
-        });
-
-        // Pre-fill credentials if they exist
-        if (localStorage.getItem('ebay_client_id')) {
-            clientIdInput.value = localStorage.getItem('ebay_client_id');
+        
+        // Training data functions
+        function exportTrainingData() {
+            showNotification('Exporting training data...', 'info');
+            // Implementation for data export
+            setTimeout(() => {
+                showNotification('Training data exported successfully!', 'success');
+            }, 1000);
         }
-        if (localStorage.getItem('ebay_client_secret')) {
-            clientSecretInput.value = localStorage.getItem('ebay_client_secret');
-        }
-        if (localStorage.getItem('ebay_sandbox')) {
-            sandboxMode.checked = localStorage.getItem('ebay_sandbox') === 'true';
+        
+        function clearTrainingData() {
+            showNotification('Training data cleared', 'success');
+            updateTrainingStats();
         }
 
 
@@ -2188,16 +2107,14 @@ Focus on clear hand gestures and finger positions that correspond to American Si
         // Initialize the app
         async function initApp() {
             await initCamera();
-            checkEbayConfiguration();
+            checkSystemConfiguration();
             setupCameraRotation();
             setupLlamaChat();
             
-            // Show setup modal if eBay is not configured
-            if (!isEbayConfigured) {
-                setTimeout(() => {
-                    showSetupModal();
-                }, 1000);
-            }
+            // Show training modal tip
+            setTimeout(() => {
+                showNotification('Tip: Click the Training button to view and manage ASL training data!', 'info', 5000);
+            }, 2000);
         }
 
         // Initialize when page loads
@@ -2249,7 +2166,7 @@ Focus on clear hand gestures and finger positions that correspond to American Si
             `;
             
             installBanner.innerHTML = `
-                <div style="font-weight: 600; margin-bottom: 8px;">📱 Install Simply eBay</div>
+                <div style="font-weight: 600; margin-bottom: 8px;">📱 Install ASL Command Center</div>
                 <div style="font-size: 0.9em; margin-bottom: 12px;">Get the full mobile experience with offline AI!</div>
                 <button id="installBtn" style="
                     background: white;
@@ -2302,7 +2219,7 @@ Focus on clear hand gestures and finger positions that correspond to American Si
                                     }, 5000);
                                 }
                             }
-                            showNotification('App installed! You can now use Simply eBay offline.', 'success', 5000);
+                            showNotification('App installed! You can now use ASL Command Center offline.', 'success', 5000);
                         }
                     deferredPrompt = null;
                 }

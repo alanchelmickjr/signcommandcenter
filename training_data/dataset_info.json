@@ -1,0 +1,25 @@
+{
+  "name": "ASL Command Center Training Dataset",
+  "version": "1.0",
+  "created": "2025-06-22T00:40:10.362090",
+  "description": "ASL sign recognition dataset for Berkeley Cal Hacks 2025",
+  "classes": [
+    "hello",
+    "thank you",
+    "help",
+    "stop",
+    "go",
+    "start",
+    "robot pick up",
+    "pick up",
+    "robot deliver",
+    "deliver",
+    "lights on",
+    "lights off",
+    "call vapi",
+    "search",
+    "spreadsheet"
+  ],
+  "total_images": 0,
+  "annotations_format": "SmolVLM_compatible"
+}

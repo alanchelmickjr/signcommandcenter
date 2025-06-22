@@ -1,7 +1,7 @@
 #!/bin/bash
-# Simply eBay - HTTPS Quick Start Script (Camera-enabled)
+# ASL Command Center - HTTPS Quick Start Script (Camera-enabled)
 
-echo "🚀 Simply eBay - HTTPS Quick Start"
+echo "🚀 ASL Command Center - HTTPS Quick Start"
 echo "=================================="
 echo "🔒 Starting with HTTPS for camera permissions"
 echo ""
@@ -37,7 +37,7 @@ echo "✅ OpenSSL found"
 # Generate SSL certificates if they don't exist
 if [ ! -f "cert.pem" ] || [ ! -f "key.pem" ]; then
     echo "🔐 Generating SSL certificates for HTTPS..."
-    openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/C=US/ST=CA/L=Local/O=Simply eBay/CN=localhost" 2>/dev/null
+    openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/C=US/ST=CA/L=Local/O=ASL Command Center/CN=localhost" 2>/dev/null
     echo "✅ SSL certificates generated"
 fi
 
@@ -120,7 +120,7 @@ if command -v llama-server &> /dev/null; then
 fi
 
 echo ""
-echo "🎉 Simply eBay is starting up!"
+echo "🎉 ASL Command Center is starting up!"
 echo "================================"
 echo "🔒 HTTPS App: https://localhost:$HTTPS_PORT"
 echo "📱 Ready for PWA installation and camera access"

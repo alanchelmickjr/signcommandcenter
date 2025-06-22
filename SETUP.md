@@ -1,4 +1,4 @@
-# Simply eBay - Setup Guide
+# ASL Command Center - Setup Guide
 
 ## Quick Start
 
@@ -60,12 +60,16 @@ llama-server \
 
 3. Open http://localhost:8000 in your browser
 
-## Optional: eBay API Setup
+## Optional: Vapi Agent Ava Setup
 
-1. Create an eBay Developer Account at [developer.ebay.com](https://developer.ebay.com)
-2. Create a new application
-3. Copy your Client ID and Client Secret
-4. Click "Setup eBay API" in the app to configure
+1. Create a Vapi account at [vapi.ai](https://vapi.ai)
+2. Create a new assistant
+3. Copy your API key and Assistant ID
+4. Configure these in the web app's localStorage or environment
+
+## Robot Control Setup
+
+For robot integration, ensure your robot control server is accessible at the configured endpoint.
 
 ## Troubleshooting
 

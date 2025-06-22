@@ -70,31 +70,35 @@ ASL Command Center creates a complete sign language interface for smart homes an
 
 ## 🚀 Quick Start - Demo Ready!
 
-### 1. Start the ASL Server
+### 1. Test System Setup
 ```bash
-# Start the AI vision server
-python asl_server.py
+# Check if everything is ready
+./test_system.sh
 ```
 
-### 2. Launch the Web Interface
+### 2. Prepare Training Infrastructure
 ```bash
-# Start HTTPS server for camera access
-./start-https.sh
-# or
-python https-server.py
+# Set up training data collection
+python3 prepare_training_data.py
 ```
 
-### 3. Open ASL Command Center
+### 3. Start the ASL System
+```bash
+# Start all services
+./start.sh
+```
+
+### 4. Open ASL Command Center
 Navigate to `https://localhost:8443` and:
 - Grant camera permissions
 - Start ASL recognition
 - Try basic signs: "Hello", "Help", "Robot pick up"
 
-### 4. Test Robot Integration
+### 5. Download GGUF Model (Automatic)
+The system will automatically download the SmolVLM model on first run. If you want to pre-download it:
 ```bash
-# The system will attempt to connect to robot endpoints
-# /robot/command - for arm control
-# /ml/log_sign - for training data
+# Model will be downloaded to models/SmolVLM/
+# No manual intervention needed
 ```
 
 ## 🤟 Supported ASL Commands
@@ -182,14 +186,19 @@ index.html (Complete ASL Interface)
 ├── Local data persistence
 ├── Session history
 └── Privacy-first architecture
+
+🤟 ASL Server (Port 5000) ✅
+├── ASL command processing
+├── Robot control integration
+└── Training data logging
 ```
 
-### 📡 **External APIs**
+### 🌐 **HTTPS Server (Port 8443)**
 ```
-🛒 eBay Browse API ✅
-├── Real-time price data
-├── Completed listings analysis
-└── Market trend information
+📱 Camera Access ✅
+├── SSL certificate auto-generation
+├── Mobile-optimized interface
+└── PWA installation support
 ```
 
 ## 🚀 Quick Start
@@ -226,43 +235,61 @@ The interface is optimized for mobile with:
 - Swipe navigation
 - Offline capability after first load
 
-## � Current Status
+## 🎯 Current Status - Berkeley Cal Hacks 2025
 
-### ✅ **Phase 1 Complete - Core PWA**
-- ✅ Real-time eBay item identification
+### ✅ **Phase 1 Complete - ASL Recognition System**
+- ✅ Real-time ASL sign detection using SmolVLM
 - ✅ PWA structure with mobile-first design  
-- ✅ Neumorphic UI with thumb-friendly controls
-- ✅ Image compression and mobile optimization
+- ✅ Camera integration for sign capture
+- ✅ Text-to-speech accessibility features
 
-### ✅ **Phase 2 Complete - eBay Integration**  
-- ✅ eBay API integration for price estimation
+### ✅ **Phase 2 Complete - Robot Integration**  
+- ✅ ASL command mapping to robot actions
 - ✅ Local data storage with gun.js
-- ✅ Recent scanning sessions history
-- ✅ Interactive setup wizard with validation
+- ✅ Training data collection pipeline
+- ✅ HTTPS server for secure camera access
 
-### � **Phase 3 In Progress - Listing Creation**
-- 🔄 eBay listing creation and posting
-- 🔄 OAuth integration for eBay authentication  
-- 🔄 Bulk listing management
+### 🔄 **Phase 3 Ready - Model Training**
+- ✅ Training infrastructure prepared
+- ✅ SmolVLM fine-tuning scripts ready
+- 🔄 Data collection in progress
+- 🔄 Model optimization for ASL accuracy
 
-## � Configuration & Advanced Usage
+## 🔧 Dataset Training for Model Tuning
 
-### **AI Models**
-You can try different vision models with llama.cpp:
-- `SmolVLM-500M-Instruct` (default, fastest)
-- `SmolVLM-1.7B-Instruct` (better accuracy)
-- [Other supported models](https://github.com/ggml-org/llama.cpp/blob/master/docs/multimodal.md)
+### Training Data Collection
+The system automatically collects ASL training data:
+- **Real-time capture**: Signs are logged during use
+- **Privacy-first**: All data stays on your device
+- **Structured format**: Compatible with SmolVLM fine-tuning
 
-### **Scan Settings**
-- **Scan Interval**: Adjust how often items are analyzed (0.5s - 3s)
-- **API Server**: Change if running llama.cpp on different port/host
-- **eBay API**: Configure through the interactive setup wizard
+### Prepare Training Infrastructure
+```bash
+# Set up training directories and scripts
+python3 prepare_training_data.py
+```
 
-### **Performance Tips**
-- **GPU Acceleration**: Add `-ngl 99` to llama-server for GPU boost
-- **Best Lighting**: Use good lighting for better AI recognition
-- **Clear Views**: Position items clearly in frame
-- **Multiple Angles**: Scan from different angles for better identification
+### Training Data Locations
+```
+training_data/
+├── asl_signs/          # Captured ASL sign images
+├── annotations/        # Sign labels and metadata
+├── processed/          # Processed training data
+└── dataset_info.json   # Dataset metadata
+```
+
+### Fine-tune SmolVLM (After Data Collection)
+```bash
+# Once you have 50+ examples per sign
+cd ml_training
+python3 train_asl_model.py
+```
+
+### Export Training Data
+```bash
+# Export collected data for backup or sharing
+# (Available through web interface)
+```
 
 ## 🆘 Troubleshooting
 
@@ -273,25 +300,35 @@ You can try different vision models with llama.cpp:
 # Check if llama.cpp is running
 ps aux | grep llama-server
 # Restart AI server  
-llama-server -hf ggml-org/SmolVLM-500M-Instruct-GGUF
+./start.sh
 # Verify port 8080 is available
 lsof -i :8080
 ```
 
+**"ASL Server Connection Failed"**
+```bash
+# Check ASL server status
+ps aux | grep asl_server
+# Check logs
+tail -f asl-server.log
+# Restart system
+./start.sh
+```
+
 **"Camera Access Denied"**
 - Enable camera permissions in browser
-- Use HTTPS or localhost only
-- Check browser developer console
+- Use HTTPS (https://localhost:8443) for camera access
+- Check browser developer console for errors
 
-**"eBay API Setup Issues"**
-- Use the interactive setup wizard
-- Verify credentials on eBay Developer Center
-- Check API rate limits
+**"SSL Certificate Issues"**
+- Accept the self-signed certificate in browser
+- Certificates are auto-generated on first run
+- Use Chrome/Safari for best SSL support
 
-**"Gun.js Storage Issues"**
-- Clear browser storage and refresh
-- Check browser console for errors
-- Gun.js loads automatically from CDN
+**"Training Data Not Collecting"**
+- Check ASL server logs: `tail -f asl-server.log`
+- Verify training directories exist
+- Use the Training Data modal to check status
 
 ## 🙏 Development Team
 
@@ -309,31 +346,31 @@ lsof -i :8080
 
 ---
 
-## 🌟 Simply eBay: Where wild horses meet gentle guidance, and barely-held reins lead to extraordinary results! 🌟
+## 🌟 ASL Command Center: Where sign language meets smart technology, and Berkeley innovation leads to digital inclusion! 🌟
 
-*Made with ❤️, ☕, and 50+ years of dreaming that AI collaboration would finally arrive*
+*Made with ❤️, ☕, and the belief that everyone deserves equal access to technology*
 
 ---
 
 ## 🤝 Contributing
 
-This project follows the **"elegance & simplicity"** principle. Contributions should:
-- Maintain the local-first architecture
+This project follows the **"accessibility first"** principle. Contributions should:
+- Maintain the privacy-first architecture
 - Keep the mobile-first design  
-- Preserve the neumorphic aesthetic
-- Add value without overengineering
+- Enhance ASL recognition accuracy
+- Improve accessibility for all users
 
 ## 📄 Documentation
 
-- [Complete Setup Guide](./SETUP.md)
-- [eBay API Configuration](./EBAY_SETUP.md)
-- [Implementation Plan](./spec/IMPLEMENTATION_PLAN01.md)
+- [Setup Guide](./SETUP.md)
+- [System Status](./SYSTEM_STATUS.md)
+- [Berkeley Cal Hacks 2025](https://calhacks.berkeley.edu/)
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/alanchelmickjr/price-is-right)
-- [Live Demo (GitHub Pages)](https://alanchelmickjr.github.io/price-is-right)
-- [Issue Tracker](https://github.com/alanchelmickjr/price-is-right/issues)
+- [GitHub Repository](https://github.com/alanchelmickjr/signcommandcenter)
+- [Berkeley Cal Hacks 2025](https://calhacks.berkeley.edu/)
+- [SmolVLM Documentation](https://huggingface.co/HuggingFaceTB/SmolVLM-500M-Instruct)
 
 ## 📄 License
 

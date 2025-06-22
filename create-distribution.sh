@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Simply eBay - Distribution Package Creator
+# ASL Command Center - Distribution Package Creator
 # Creates a ready-to-distribute package
 
-echo "📦 Creating Simply eBay Distribution Package..."
+echo "📦 Creating ASL Command Center Distribution Package..."
 echo "=============================================="
 
 # Create distribution directory
-DIST_DIR="SimplyeBay-Distribution"
+DIST_DIR="ASLCommandCenter-Distribution"
 rm -rf "$DIST_DIR" 2>/dev/null || true
 mkdir -p "$DIST_DIR"
 
@@ -30,10 +30,10 @@ cp INSTALL_README.md "$DIST_DIR/README.md"
 cat > "$DIST_DIR/DOUBLE-CLICK-TO-INSTALL.command" << 'EOF'
 #!/bin/bash
 
-echo "🚀 Simply eBay - Double-Click Installer"
-echo "======================================"
+echo "🚀 ASL Command Center - Double-Click Installer"
+echo "=============================================="
 echo ""
-echo "This will automatically install and launch Simply eBay!"
+echo "This will automatically install and launch ASL Command Center!"
 echo ""
 
 # Get the directory where this script is located
@@ -49,7 +49,7 @@ chmod +x "$DIST_DIR/DOUBLE-CLICK-TO-INSTALL.command"
 
 # Create a quick start guide
 cat > "$DIST_DIR/QUICK-START.txt" << 'EOF'
-🚀 Simply eBay - Quick Start Guide
+🚀 ASL Command Center - Quick Start Guide
 
 FOR COMPLETE BEGINNERS:
 1. Double-click "DOUBLE-CLICK-TO-INSTALL.command"
@@ -72,12 +72,12 @@ EOF
 
 # Create archive
 echo "🗜️  Creating distribution archive..."
-tar -czf "SimplyeBay-OneClick-Installer.tar.gz" "$DIST_DIR"
+tar -czf "ASLCommandCenter-OneClick-Installer.tar.gz" "$DIST_DIR"
 
 # Create DMG for macOS (if on macOS)
 if command -v hdiutil >/dev/null 2>&1; then
     echo "💿 Creating macOS DMG..."
-    hdiutil create -volname "Simply eBay" -srcfolder "$DIST_DIR" -ov -format UDZO "SimplyeBay-OneClick-Installer.dmg" >/dev/null 2>&1
+    hdiutil create -volname "ASL Command Center" -srcfolder "$DIST_DIR" -ov -format UDZO "ASLCommandCenter-OneClick-Installer.dmg" >/dev/null 2>&1
 fi
 
 echo ""
@@ -85,9 +85,9 @@ echo "✅ Distribution package created!"
 echo "==============================="
 echo ""
 echo "📦 Files created:"
-echo "   • SimplyeBay-OneClick-Installer.tar.gz (cross-platform)"
-if [ -f "SimplyeBay-OneClick-Installer.dmg" ]; then
-echo "   • SimplyeBay-OneClick-Installer.dmg (macOS)"
+echo "   • ASLCommandCenter-OneClick-Installer.tar.gz (cross-platform)"
+if [ -f "ASLCommandCenter-OneClick-Installer.dmg" ]; then
+echo "   • ASLCommandCenter-OneClick-Installer.dmg (macOS)"
 fi
 echo "   • $DIST_DIR/ (folder for testing)"
 echo ""

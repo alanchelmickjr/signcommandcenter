@@ -1,7 +1,7 @@
 {
-  "name": "Simply eBay",
-  "short_name": "SimplyeBay",
-  "description": "Point your camera, get instant AI pricing, list to eBay",
+  "name": "ASL Command Center",
+  "short_name": "ASLCenter",
+  "description": "Real-time sign language recognition for robot control and AI assistance",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#e6e9ef",

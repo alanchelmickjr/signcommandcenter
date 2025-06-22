@@ -1,5 +1,5 @@
-// Service Worker for Simply eBay PWA
-const CACHE_NAME = 'simply-ebay-v1.0.0';
+// Service Worker for ASL Command Center PWA
+const CACHE_NAME = 'asl-command-center-v1.0.0';
 const urlsToCache = [
   './',
   './index.html',
@@ -72,7 +72,7 @@ self.addEventListener('sync', event => {
 // Push notification support (for future features)
 self.addEventListener('push', event => {
   const options = {
-    body: event.data ? event.data.text() : 'New notification from Simply eBay',
+    body: event.data ? event.data.text() : 'New notification from ASL Command Center',
     icon: './icon-192.png',
     badge: './icon-192.png',
     vibrate: [100, 50, 100],
@@ -83,6 +83,6 @@ self.addEventListener('push', event => {
   };
   
   event.waitUntil(
-    self.registration.showNotification('Simply eBay', options)
+    self.registration.showNotification('ASL Command Center', options)
   );
 });
