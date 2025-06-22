@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SignSpeak - Real-time Sign Language Recognition</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤟</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤟</text></svg>">
+    <meta name="theme-color" content="#4285f4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <style>
+        :root {
+            /* Enhanced Color Palette */
+            --primary-bg: #e6e9ef;
+            --surface-bg: #e6e9ef;
+            --text-primary: #2d3748;
+            --text-secondary: #5a6c86;
+            --accent-color: #4285f4;
+            --success-color: #38b2ac;
+            --warning-color: #ed8936;
+            
+            /* Refined Shadows */
+            --shadow-light: #ffffff;
+            --shadow-dark: #a3b1c6;
+            --shadow-soft: rgba(163, 177, 198, 0.3);
+            
+            /* Enhanced Neumorphic Effects */
+            --shadow-small: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+            --shadow-medium: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            --shadow-large: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
+            --shadow-inset: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+            
+            /* Refined Measurements */
+            --border-radius-sm: 12px;
+            --border-radius-md: 20px;
+            --border-radius-lg: 30px;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --thumb-size: 60px;
+            
+            /* Animation Timings */
+            --transition-fast: 0.2s;
+            --transition-medium: 0.3s;
+            --transition-slow: 0.5s;
+        }
+
+        /* Global Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            transition: all var(--transition-fast) ease;
+        }
+
+        *:focus {
+            outline: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            line-height: 1.5;
+            letter-spacing: 0.01em;
+        }
+
+        /* Enhanced Button Styles */
+        button {
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            transition: all var(--transition-fast) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+
+        .camera-container {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            height: 100vh;
+            animation: fadeIn var(--transition-slow) ease;
+        }
+
+        #videoFeed {
+            object-fit: cover;
+            background-color: #000;
+            flex: 3;
+        }
+
+        .left-pane {
+            flex: 1;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            right: var(--spacing-md);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-md);
+            backdrop-filter: blur(15px);
+            transform: translateY(-100%);
+            transition: all var(--transition-medium) cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .video-overlay.show {
+            transform: translateY(0);
+            animation: slideUp var(--transition-medium) ease;
+        }
+
+        .identified-items {
+            background: white;
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            min-height: 200px;
+            height: 100%;
+            flex: 3;
+            transition: all var(--transition-medium) ease;
+            animation: fadeIn var(--transition-medium) ease;
+        }
+
+        .identified-items:hover {
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
+        }
+
+        .items-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .item-card {
+            background: var(--surface-bg);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            border-left: 4px solid var(--success-color);
+            transition: all var(--transition-medium) cubic-bezier(0.4, 0, 0.2, 1);
+            animation: scaleIn var(--transition-medium) ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-large);
+        }
+
+        .item-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.1), transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .item-card:hover::after {
+            transform: translateX(100%);
+        }
+
+        .item-card.confidence-high {
+            border-left-color: var(--success-color); /* Green for high confidence */
+        }
+
+        .item-card.confidence-medium {
+            border-left-color: var(--warning-color); /* Orange for medium confidence */
+        }
+
+        .item-card.confidence-low {
+            border-left-color: #e53e3e; /* Red for low confidence */
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .item-details {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+
+        .fab-menu {
+            position: absolute;
+            bottom: calc(100% + var(--spacing-sm));
+            right: 0;
+            background: var(--surface-bg);
+            border-radius: var(--border-radius-md);
+            box-shadow: 8px 8px 16px var(--shadow-dark),
+                       -8px -8px 16px var(--shadow-light),
+                       inset -2px -2px 4px var(--shadow-light),
+                       inset 2px 2px 4px var(--shadow-dark);
+            padding: var(--spacing-sm);
+            display: none;
+            min-width: 200px;
+        }
+
+        .fab-menu.show {
+            display: block;
+            animation: slideUp var(--transition-medium) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+
+        /* Utility controls bottom right */
+        .utility-controls {
+            bottom: var(--spacing-lg);
+            right: var(--spacing-lg);
+            display: flex;
+            gap: var(--spacing-sm);
+            z-index: 100;
+        }
+
+        .control-btn {
+            border: none;
+            border-radius: 50%;
+            background: var(--surface-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            width: calc(var(--thumb-size) * 0.7);
+            height: calc(var(--thumb-size) * 0.7);
+        }
+
+        .control-button-wrapper {
+            display: flex;
+            justify-content: space-between;
+            background-color: white;
+            align-items: center;
+            height: 100px;
+            padding: 24px;
+            border-radius: 24px;
+        }
+
+        /* Utility controls bottom right */
+        .utility-controls {
+            bottom: var(--spacing-lg);
+            right: var(--spacing-lg);
+            display: flex;
+            gap: var(--spacing-sm);
+            z-index: 100;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            box-shadow: inset 4px 4px 8px var(--shadow-dark),
+                       inset -4px -4px 8px var(--shadow-light);
+        }
+
+        /* Remove any background elements from eBay button */
+        .control-btn .status-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            margin: 0;
+            padding: 2px 4px;
+            font-size: 0.5rem;
+            border-radius: 50%;
+            background: var(--warning-color);
+            color: white;
+        }
+
+        /* Inset Camera View */
+        .video-wrapper {
+            position: relative;
+            background: #000;
+            border-radius: 24px;
+            overflow: hidden;
+            margin: var(--spacing-sm);
+            aspect-ratio: 4/3;
+        }
+
+        /* Art Deco Frame */
+        .dashboard-frame {
+            position: absolute;
+            top: var(--spacing-sm);
+            left: var(--spacing-sm);
+            right: var(--spacing-sm);
+            bottom: var(--spacing-sm);
+            border: 4px solid var(--surface-bg);
+            border-radius: var(--border-radius-md);
+            box-shadow: inset 0 0 0 1px var(--shadow-dark);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Large scan button - separate from dashboard */
+        .scan-button {
+            background-color:#0066F5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 64px;
+            width: 64px;
+            color: white;
+            font-family: sans-serif;
+            font-weight: 500;
+            font-size: 18px;
+            z-index: 100;
+            border-radius: 50%;
+        }
+
+        .control-btn.scan:active {
+            transform: scale(0.95);
+            box-shadow: 3px 3px 6px var(--shadow-dark),
+                       -3px -3px 6px var(--shadow-light),
+                       inset -4px -4px 8px var(--shadow-dark),
+                       inset 4px 4px 8px var(--shadow-light);
+            background: var(--warning-color);
+        }
+
+        .fab-menu-item {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-sm) var(--spacing-md);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: var(--border-radius-sm);
+            transition: background var(--transition-fast) ease;
+        }
+
+        .fab-menu-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .fab-menu-item i {
+            margin-right: var(--spacing-sm);
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .primary-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        .primary-button:active::after {
+            transform: translate(-50%, -50%) scale(2);
+        }
+
+        .primary-button.start {
+            background: var(--surface-bg);
+            color: var(--success-color);
+            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+        }
+
+        .primary-button.start:active {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+        }
+
+        .primary-button.stop {
+            background: var(--warning-color);
+            color: white;
+            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-fast) ease;
+        }
+
+        .settings-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: color var(--transition-fast) ease;
+        }
+
+        .settings-input {
+            background: var(--surface-bg);
+            border: none;
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            box-shadow: var(--shadow-inset);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all var(--transition-fast) ease;
+        }
+
+        .settings-input:focus {
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light), 0 0 0 2px rgba(66, 133, 244, 0.2);
+            transform: scale(1.02);
+        }
+
+        .settings-input:hover {
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: var(--spacing-sm);
+            transition: all var(--transition-fast) ease;
+            position: relative;
+        }
+
+        .status-indicator::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity var(--transition-fast) ease;
+        }
+
+        .status-ready { 
+            background-color: var(--success-color);
+            box-shadow: 0 0 4px rgba(56, 178, 172, 0.4);
+        }
+
+        .status-processing { 
+            background-color: var(--warning-color);
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 4px rgba(237, 137, 54, 0.4);
+        }
+
+        .status-error { 
+            background-color: #e53e3e;
+            box-shadow: 0 0 4px rgba(229, 62, 62, 0.4);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .confidence-high {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .confidence-medium {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .confidence-low {
+            border-left: 4px solid #e53e3e;
+        }
+
+        /* Setup Wizard Styles */
+        .setup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .setup-card {
+            background: var(--surface-bg);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-large), 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp var(--transition-medium) cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transform: translateZ(0);
+            transition: transform var(--transition-medium) cubic-bezier(0.4, 0, 0.2, 1),
+                        box-shadow var(--transition-medium) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .setup-card:hover {
+            transform: translateY(-2px) translateZ(0);
+            box-shadow: var(--shadow-large), 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .setup-header {
+            padding: 20px 20px 10px;
+            text-align: center;
+            border-bottom: 1px solid rgba(163, 177, 198, 0.2);
+        }
+
+        .setup-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+
+        .setup-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .setup-content {
+            padding: 20px;
+        }
+
+        .setup-step {
+            display: none;
+        }
+
+        .setup-step.active {
+            display: block;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            font-weight: 600;
+            margin-right: 10px;
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+        }
+
+        .step-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .setup-input {
+            width: 100%;
+            background: var(--surface-bg);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            box-shadow: var(--shadow-inset);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-fast) ease;
+            font-family: inherit;
+        }
+
+        .setup-input:focus {
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light), 0 0 0 2px rgba(66, 133, 244, 0.2);
+            transform: scale(1.01);
+            outline: none;
+        }
+
+        .setup-input:hover {
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
+        }
+
+        .setup-button {
+            background: var(--surface-bg);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast) cubic-bezier(0.4, 0, 0.2, 1);
+            margin-right: var(--spacing-sm);
+            box-shadow: var(--shadow-medium);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .setup-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        .setup-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-large);
+        }
+
+        .setup-button:active::after {
+            transform: translate(-50%, -50%) scale(2);
+        }
+
+        .setup-button:active {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+        }
+
+        .setup-button.primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .setup-button.secondary {
+            color: var(--text-secondary);
+        }
+
+        .setup-buttons {
+            text-align: right;
+            padding-top: 20px;
+            border-top: 1px solid rgba(163, 177, 198, 0.2);
+        }
+
+        .external-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .external-link:hover {
+            text-decoration: underline;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-badge.success {
+            background: rgba(72, 187, 120, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-badge.error {
+            background: rgba(229, 62, 62, 0.2);
+            color: #e53e3e;
+        }
+
+        .status-badge.warning {
+            background: rgba(237, 137, 54, 0.2);
+            color: var(--warning-color);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(163, 177, 198, 0.3);
+            border-radius: 3px;
+            margin: 15px 0 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), #5a9fd4);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 16.67%; /* 1/6 steps */
+        }
+
+        .progress-text {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin: 0;
+        }
+
+        /* Notification System */
+        .notification {
+            position: fixed;
+            top: var(--spacing-lg);
+            right: var(--spacing-lg);
+            background: var(--surface-bg);
+            border-radius: var(--border-radius-sm);
+            box-shadow: var(--shadow-large);
+            padding: var(--spacing-md) var(--spacing-lg);
+            max-width: 300px;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: all var(--transition-medium) cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideUp var(--transition-medium) ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+            animation: slideUp var(--transition-medium) ease;
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification.error {
+            border-left: 4px solid #e53e3e;
+        }
+
+        .notification.info {
+            border-left: 4px solid var(--accent-color);
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-content {
+            text-align: center;
+            max-width: 400px;
+            padding: var(--spacing-lg);
+            animation: fadeIn var(--transition-slow) ease;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(66, 133, 244, 0.2);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--spacing-lg);
+            box-shadow: 0 4px 8px rgba(66, 133, 244, 0.2);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-content h2 {
+            color: var(--accent-color);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .loading-content p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .loading-checklist {
+            text-align: left;
+        }
+
+        .loading-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .loading-icon {
+            width: 20px;
+            margin-right: 10px;
+            font-size: 0.8rem;
+        }
+
+        .loading-item.success .loading-icon {
+            color: var(--success-color);
+        }
+
+        .loading-item.error .loading-icon {
+            color: #e53e3e;
+        }
+
+        @media (min-width: 768px) {
+            .camera-container {
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="camera-container">
+        <div class="video-wrapper">
+            <video id="videoFeed" autoplay playsinline></video>
+            <div class="dashboard-frame"></div>
+            <div id="videoOverlay" class="video-overlay">
+                <div class="status-indicator status-ready"></div>
+                <span id="overlayText">Ready to scan</span>
+            </div>
+        </div>
+
+        <div class="left-pane">
+            <section class="identified-items">
+                <div class="settings-row" style="margin-bottom: 15px;">
+                    <h2 class="items-header" style="margin: 0;">AI Raw Output</h2>
+                    <button id="toggleRawBtn" class="settings-input" style="padding: 5px 10px; cursor: pointer;">Show</button>
+                </div>
+                <div id="rawOutput" style="
+                    display: none;
+                    background: var(--surface-bg);
+                    border-radius: var(--border-radius-sm);
+                    box-shadow: var(--shadow-inset);
+                    padding: var(--spacing-md);
+                    margin-bottom: var(--spacing-md);
+                    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                    font-size: 0.8rem;
+                    line-height: 1.4;
+                    color: var(--text-secondary);
+                    white-space: pre-wrap;
+                    max-height: 200px;
+                    overflow-y: auto;
+                ">
+                    AI responses will appear here...
+                </div>
+            </section>
+            
+            <section class="identified-items ">
+                <h2 class="items-header">Recognized Commands</h2>
+                <div id="itemsList">
+                    <p style="color: var(--text-secondary); font-style: italic;">
+                        Start scanning to recognize sign language commands...
+                    </p>
+                </div>
+            </section>
+
+            <section class="control-button-wrapper">
+                            <!-- Scan button bottom left -->
+                            <button id="startButton" class="scan-button" title="Start/Stop Scanning">
+                                Scan
+                                
+                            </button>
+                            
+                            <!-- Utility buttons bottom right -->
+                            <div class="utility-controls">
+                                <button id="rotateBtn" class="control-btn utility" title="Rotate Camera View">📱</button>
+                                <button id="llamaBtn" class="control-btn utility" title="Open Llama Chat">🦙</button>
+                                <button id="settingsBtn" class="control-btn utility" title="Settings">⚙️</button>
+                                <button id="setupEbayBtn" class="control-btn utility" style="background: var(--warning-color); color: white; display: none;" title="Setup eBay">
+                                    🛍️
+                                </button>
+                            </div>
+                        </section>
+        </div>
+        <section class="identified-items" id="historySection" style="display: none;">
+            <div class="settings-row" style="margin-bottom: 15px;">
+                <h2 class="items-header" style="margin: 0;">Recent Sessions</h2>
+                <button id="toggleHistoryBtn" class="settings-input" style="padding: 5px 10px; cursor: pointer;">Show</button>
+            </div>
+            <div id="historyList">
+                <p style="color: var(--text-secondary); font-style: italic;">
+                    No recent scanning sessions...
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Settings Menu -->
+    <div class="fab-menu" id="settingsMenu" style="
+        position: fixed;
+        bottom: calc(var(--spacing-lg) + var(--thumb-size));
+        right: var(--spacing-lg);
+        z-index: 1001;
+        background: var(--surface-bg);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-large);
+    ">
+        <div class="fab-menu-item">
+            <i>⏱️</i>
+            <div style="flex: 1;">
+                <label class="settings-label">Scan Interval</label>
+                <select id="intervalSelect" class="settings-input" style="width: 100%; margin-top: 4px;">
+                    <option value="1000">1s</option>
+                    <option value="2000" selected>2s (Default)</option>
+                    <option value="3000">3s</option>
+                    <option value="5000">5s</option>
+                </select>
+            </div>
+        </div>
+        <div class="fab-menu-item">
+            <i>🔌</i>
+            <div style="flex: 1;">
+                <label class="settings-label">API Server</label>
+                <input id="baseURL" class="settings-input" value="http://localhost:8080" style="width: 100%; margin-top: 4px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Modal -->
+    <div id="setupModal" class="setup-modal" style="display: none;">
+        <div class="setup-card">
+            <div class="setup-header">
+                <h2 class="setup-title">eBay API Setup</h2>
+                <p class="setup-subtitle">Get real-time pricing for your items</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Step 1 of 6</p>
+            </div>
+            
+            <div class="setup-content">
+                <!-- Step 1: Welcome -->
+                <div class="setup-step active" data-step="1">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        Welcome to eBay Integration
+                    </div>
+                    <div class="step-description">
+                        To get real-time pricing for items you scan, you'll need eBay API credentials. This takes about 5 minutes and is completely free.
+                        <br><br>
+                        <strong>What you'll get:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Real eBay sold listing prices</li>
+                            <li>Market trend analysis</li>
+                            <li>Accurate item valuations</li>
+                        </ul>
+                        <br>
+                        Don't worry - we'll walk you through every step!
+                    </div>
+                </div>
+
+                <!-- Step 2: Create Account -->
+                <div class="setup-step" data-step="2">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Create eBay Developer Account
+                    </div>
+                    <div class="step-description">
+                        First, you'll need an eBay Developer account (it's free!):
+                        <br><br>
+                        1. Click the button below to open eBay Developer Portal<br>
+                        2. Sign up with your eBay account (or create one)<br>
+                        3. Accept the developer terms<br>
+                        4. Come back here when done!
+                        <br><br>
+                        <a href="https://developer.ebay.com/" target="_blank" class="external-link">
+                            🔗 Open eBay Developer Portal
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Step 3: Create Application -->
+                <div class="setup-step" data-step="3">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        Create Your Application
+                    </div>
+                    <div class="step-description">
+                        Now create an application in your eBay Developer account:
+                        <br><br>
+                        1. In the developer portal, go to <strong>"My Account" → "Applications"</strong><br>
+                        2. Click <strong>"Create New Application"</strong><br>
+                        3. Fill in these details:<br>
+                        <div style="background: rgba(66, 133, 244, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                            <strong>Application Name:</strong> Simply eBay Scanner<br>
+                            <strong>Application Type:</strong> Public<br>
+                            <strong>Platform:</strong> Web<br>
+                            <strong>Description:</strong> Real-time eBay item identification and pricing tool
+                        </div>
+                        4. Submit the application<br>
+                        5. Come back here when you have your credentials!
+                    </div>
+                </div>
+
+                <!-- Step 4: Enter Credentials -->
+                <div class="setup-step" data-step="4">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        Enter Your Credentials
+                    </div>
+                    <div class="step-description">
+                        Copy your credentials from the eBay Developer Portal and paste them below:
+                        <br><br>
+                    </div>
+                    <input type="text" id="clientIdInput" class="setup-input" placeholder="Client ID (App ID)" />
+                    <input type="text" id="clientSecretInput" class="setup-input" placeholder="Client Secret (Cert ID)" />
+                    <div style="margin-top: 10px;">
+                        <label style="display: flex; align-items: center; color: var(--text-secondary);">
+                            <input type="checkbox" id="sandboxMode" checked style="margin-right: 8px;">
+                            Use Sandbox Mode (recommended for testing)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Step 5: Test Connection -->
+                <div class="setup-step" data-step="5">
+                    <div class="step-title">
+                        <span class="step-number">5</span>
+                        Test Connection
+                    </div>
+                    <div class="step-description">
+                        Let's test your eBay API connection:
+                        <br><br>
+                        <div id="connectionStatus" style="padding: 15px; border-radius: 10px; margin: 10px 0; background: rgba(237, 137, 54, 0.1);">
+                            Click "Test Connection" to verify your credentials work correctly.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 6: Complete -->
+                <div class="setup-step" data-step="6">
+                    <div class="step-title">
+                        <span class="step-number">✓</span>
+                        Setup Complete!
+                    </div>
+                    <div class="step-description">
+                        🎉 Awesome! Your eBay API is now configured and working.
+                        <br><br>
+                        <strong>What's next:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Start scanning items with your camera</li>
+                            <li>Get real eBay pricing instantly</li>
+                            <li>See recent sold listings</li>
+                        </ul>
+                        <br>
+                        Your credentials are stored locally and never shared with anyone.
+                    </div>
+                </div>
+            </div>
+
+            <div class="setup-buttons">
+                <button id="setupPrevBtn" class="setup-button secondary" style="display: none;">← Previous</button>
+                <button id="setupNextBtn" class="setup-button primary">Get Started →</button>
+                <button id="setupTestBtn" class="setup-button primary" style="display: none;">Test Connection</button>
+                <button id="setupCloseBtn" class="setup-button primary" style="display: none;">Start Scanning!</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="canvas" class="hidden"></canvas>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2>Simply eBay</h2>
+            <p id="loadingText">Loading dependencies...</p>
+            <div class="loading-checklist">
+                <div class="loading-item" id="checkBrowser">
+                    <span class="loading-icon">⏳</span>
+                    <span>Checking browser compatibility</span>
+                </div>
+                <div class="loading-item" id="checkCamera">
+                    <span class="loading-icon">⏳</span>
+                    <span>Initializing camera access</span>
+                </div>
+                <div class="loading-item" id="checkGun">
+                    <span class="loading-icon">⏳</span>
+                    <span>Loading local database</span>
+                </div>
+                <div class="loading-item" id="checkAI">
+                    <span class="loading-icon">⏳</span>
+                    <span>Connecting to AI server</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gun.js for local data persistence -->
+    <script src="https://cdn.jsdelivr.net/npm/gun@0.2020.1235/gun.js"></script>
+    
+    <script>
+        // Initialize Gun.js with relay server for data persistence
+        const gun = Gun({
+            peers: ['http://localhost:8765/gun'] // Relay server
+        });
+        const items = gun.get('ebay-items');
+        
+        // eBay API configuration - will be updated by setup wizard
+        const EBAY_CONFIG = {
+            clientId: localStorage.getItem('ebay_client_id') || 'your-ebay-client-id',
+            clientSecret: localStorage.getItem('ebay_client_secret') || 'your-ebay-client-secret',
+            sandbox: localStorage.getItem('ebay_sandbox') === 'true' || true,
+            get baseUrl() {
+                return this.sandbox ? 'https://api.sandbox.ebay.com' : 'https://api.ebay.com';
+            }
+        };
+
+        const video = document.getElementById('videoFeed');
+        const canvas = document.getElementById('canvas');
+        const baseURL = document.getElementById('baseURL');
+        const intervalSelect = document.getElementById('intervalSelect');
+        const startButton = document.getElementById('startButton');
+        const itemsList = document.getElementById('itemsList');
+        const historySection = document.getElementById('historySection');
+        const historyList = document.getElementById('historyList');
+        const toggleHistoryBtn = document.getElementById('toggleHistoryBtn');
+        const videoOverlay = document.getElementById('videoOverlay');
+        const overlayText = document.getElementById('overlayText');
+
+        // Setup wizard elements
+        const setupModal = document.getElementById('setupModal');
+        const setupEbayBtn = document.getElementById('setupEbayBtn');
+        const setupPrevBtn = document.getElementById('setupPrevBtn');
+        const setupNextBtn = document.getElementById('setupNextBtn');
+        const setupTestBtn = document.getElementById('setupTestBtn');
+        const setupCloseBtn = document.getElementById('setupCloseBtn');
+        const clientIdInput = document.getElementById('clientIdInput');
+        const clientSecretInput = document.getElementById('clientSecretInput');
+        const sandboxMode = document.getElementById('sandboxMode');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const ebayStatus = document.getElementById('ebayStatus');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        let stream;
+        let intervalId;
+        let isProcessing = false;
+        let currentSetupStep = 1;
+        let isEbayConfigured = false;
+
+        // Sign language recognition instruction
+        const SIGN_LANGUAGE_INSTRUCTION = `Look at this image and identify any sign language gestures being performed.
+
+Analyze the hand positions, finger configurations, and hand movements visible in the image. If you can recognize any sign language letters, words, or phrases, respond with this exact format:
+COMMAND: [recognized text/sentence/phrase] | TYPE: [Letter/Word/Sentence] | CONFIDENCE: [High/Medium/Low] | DESCRIPTION: [brief description of the hand gesture]
+
+Examples:
+COMMAND: Hello | TYPE: Word | CONFIDENCE: High | DESCRIPTION: Open hand waving gesture
+COMMAND: A | TYPE: Letter | CONFIDENCE: Medium | DESCRIPTION: Closed fist with thumb beside index finger  
+COMMAND: Thank you | TYPE: Sentence | CONFIDENCE: High | DESCRIPTION: Hand moving from chin outward
+COMMAND: How are you | TYPE: Sentence | CONFIDENCE: Medium | DESCRIPTION: Series of gestures forming complete question
+
+Focus on clear hand gestures and finger positions that correspond to American Sign Language (ASL). Group letters into words and words into sentences when possible. If no clear sign language is detected, respond with "No clear sign language detected in image."`;
+
+        // eBay API token management
+        let ebayAccessToken = null;
+        let tokenExpiry = null;
+
+        // Get eBay OAuth access token
+        async function getEbayAccessToken() {
+            if (ebayAccessToken && tokenExpiry && Date.now() < tokenExpiry) {
+                return ebayAccessToken;
+            }
+
+            try {
+                const response = await fetch(`${EBAY_CONFIG.baseUrl}/identity/v1/oauth2/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Basic ${btoa(`${EBAY_CONFIG.clientId}:${EBAY_CONFIG.clientSecret}`)}`
+                    },
+                    body: 'grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to get eBay token: ${response.status}`);
+                }
+
+                const data = await response.json();
+                ebayAccessToken = data.access_token;
+                tokenExpiry = Date.now() + (data.expires_in * 1000);
+                return ebayAccessToken;
+            } catch (error) {
+                console.error('Error getting eBay token:', error);
+                // Fall back to mock data if API fails
+                return null;
+            }
+        }
+
+        // Real eBay API function to fetch price estimates
+        async function fetchEbayPriceEstimate(itemName) {
+            console.log(`Fetching eBay data for: ${itemName}`);
+            
+            try {
+                const token = await getEbayAccessToken();
+                if (!token) {
+                    throw new Error('Could not obtain eBay access token');
+                }
+
+                // Search for completed listings to get price data
+                const searchUrl = `${EBAY_CONFIG.baseUrl}/buy/browse/v1/item_summary/search`;
+                const params = new URLSearchParams({
+                    q: itemName,
+                    limit: 20,
+                    filter: 'conditionIds:{3000|3500|4000|5000},deliveryCountry:US,soldListings:true',
+                    sort: 'price'
+                });
+
+                const response = await fetch(`${searchUrl}?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`eBay API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.itemSummaries || data.itemSummaries.length === 0) {
+                    throw new Error('No eBay listings found');
+                }
+
+                // Calculate average price from recent sold listings
+                const prices = data.itemSummaries
+                    .filter(item => item.price && item.price.value)
+                    .map(item => parseFloat(item.price.value));
+                
+                if (prices.length === 0) {
+                    throw new Error('No price data available');
+                }
+
+                const averagePrice = (prices.reduce((sum, price) => sum + price, 0) / prices.length).toFixed(2);
+                const currency = data.itemSummaries[0].price.currency || 'USD';
+                
+                return {
+                    averagePrice,
+                    currency,
+                    listingUrl: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(itemName)}&_sacat=0&LH_Sold=1`,
+                    sampleListings: data.itemSummaries.slice(0, 3).map(item => ({
+                        title: item.title,
+                        price: item.price.value,
+                        currency: item.price.currency,
+                        itemUrl: item.itemWebUrl
+                    }))
+                };
+            } catch (error) {
+                console.warn(`eBay API failed for ${itemName}, using mock data:`, error);
+                // Fall back to mock data
+                const mockPrice = (Math.random() * 100 + 10).toFixed(2);
+                return {
+                    averagePrice: mockPrice,
+                    currency: "USD",
+                    listingUrl: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(itemName)}`,
+                    isMockData: true
+                };
+            }
+        }
+
+        // Save identified items to local storage
+        function saveItemsLocally(items) {
+            // Store individual items in current session
+            items.forEach((item, index) => {
+                const itemData = {
+                    ...item,
+                    sessionId: currentSessionId,
+                    itemIndex: index,
+                    timestamp: Date.now()
+                };
+                gun.get('sessions').get(currentSessionId).get('items').set(itemData);
+            });
+            
+            // Update session metadata
+            gun.get('sessions').get(currentSessionId).put({
+                itemCount: currentSessionItems.size,
+                lastUpdate: Date.now()
+            });
+        }
+
+        // Load recent scanning sessions
+        async function loadRecentSessions() {
+            return new Promise((resolve) => {
+                const sessions = [];
+                gun.get('sessions').map().once((sessionData, sessionId) => {
+                    if (sessionData && sessionData.startTime) {
+                        sessions.push(sessionData);
+                    }
+                });
+                
+                // Give it a moment to load
+                setTimeout(() => resolve(sessions.sort((a, b) => b.startTime - a.startTime)), 1500);
+            });
+        }
+
+        async function sendChatCompletionRequest(instruction, imageBase64URL) {
+            try {
+                const response = await fetch(`${baseURL.value}/v1/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4-vision-preview",
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    {
+                                        type: "text",
+                                        text: instruction
+                                    },
+                                    {
+                                        type: "image_url",
+                                        image_url: {
+                                            url: imageBase64URL
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        max_tokens: 500
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${errorData}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                throw new Error(`Request failed: ${error.message}`);
+            }
+        }
+
+        async function initCamera() {
+            try {
+                // Start with portrait constraints
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        aspectRatio: { ideal: 0.75 }, // 3:4 portrait ratio
+                        width: { ideal: 720 },
+                        height: { ideal: 1280 }
+                    }, 
+                    audio: false 
+                });
+                video.srcObject = stream;
+                updateStatus('ready', 'Camera ready - start scanning');
+                return true;
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                updateStatus('error', `Camera error: ${err.message}`);
+                throw err;
+            }
+        }
+
+        // Camera rotation handler
+        function setupCameraRotation() {
+            const wrapper = document.querySelector('.video-wrapper');
+            let isPortrait = true; // Start in portrait mode
+            
+            // Set initial portrait mode
+            wrapper.style.aspectRatio = '3/4';
+            
+            document.getElementById('rotateBtn').addEventListener('click', async () => {
+                isPortrait = !isPortrait;
+                
+                // Get current track
+                const track = stream.getVideoTracks()[0];
+                
+                // Apply new constraints
+                try {
+                    await track.applyConstraints({
+                        aspectRatio: isPortrait ? 0.75 : 1.33333 // 3:4 or 4:3
+                    });
+                    
+                    // Update wrapper aspect ratio
+                    wrapper.style.aspectRatio = isPortrait ? '3/4' : '4/3';
+                } catch (err) {
+                    console.error('Failed to change aspect ratio:', err);
+                }
+            });
+        }
+
+        // Clear current session items when starting new scan
+        function clearCurrentSession() {
+            currentSessionItems.clear();
+            itemsList.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">Start scanning to recognize sign language commands...</p>';
+        }
+
+        // Enhanced history display with session loading
+        function displayHistory(sessions) {
+            if (sessions.length === 0) {
+                historyList.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">No recent scanning sessions...</p>';
+                return;
+            }
+
+            const historyHTML = sessions.map(session => {
+                const date = new Date(session.startTime).toLocaleDateString();
+                const time = new Date(session.startTime).toLocaleTimeString();
+                const duration = session.endTime ? 
+                    Math.round((session.endTime - session.startTime) / 1000) + 's' : 
+                    'Active';
+                
+                return `
+                <div class="item-card" style="border-left-color: var(--accent-color);">
+                    <div class="item-name">Session: ${date} at ${time}</div>
+                    <div class="item-details">
+                        <strong>Duration:</strong> ${duration}<br>
+                        <strong>Commands Found:</strong> ${session.itemCount || 0}<br>
+                        <button onclick="loadSession('${session.id}')" class="settings-input" style="margin-top: 10px;">
+                            View Commands
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            historyList.innerHTML = historyHTML;
+        }
+
+        // Load specific session
+        function loadSession(sessionId) {
+            clearCurrentSession();
+            gun.get('sessions').get(sessionId).get('items').map().once((item, id) => {
+                if (item) {
+                    addItemToDisplay(item);
+                }
+            });
+        }
+
+        function updateStatus(type, message) {
+            const indicator = document.querySelector('.status-indicator');
+            indicator.className = `status-indicator status-${type}`;
+            overlayText.textContent = message;
+            videoOverlay.classList.toggle('show', type !== 'ready');
+        }
+
+        function captureImage() {
+            if (!stream || !video.videoWidth) {
+                console.warn("Video stream not ready for capture.");
+                return null;
+            }
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/jpeg', 0.7);
+        }
+
+        // Current session ID
+        let currentSessionId = `scan_${Date.now()}`;
+        let currentSessionItems = new Set();
+
+        function parseAIResponse(response) {
+            // Show raw output for debugging
+            document.getElementById('rawOutput').textContent = response;
+            
+            const newItems = [];
+            const lines = response.split('\n');
+            
+            for (const line of lines) {
+                if (line.includes('COMMAND:')) {
+                    const commandMatch = line.match(/COMMAND:\s*([^|]+)/);
+                    const typeMatch = line.match(/TYPE:\s*([^|]+)/);
+                    const confidenceMatch = line.match(/CONFIDENCE:\s*([^|]+)/);
+                    const descriptionMatch = line.match(/DESCRIPTION:\s*([^|]+)/);
+                    
+                    if (commandMatch) {
+                        const commandText = commandMatch[1].trim();
+                        // Only add if not already in current session
+                        if (!currentSessionItems.has(commandText)) {
+                            const item = {
+                                id: `${currentSessionId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                name: commandText,
+                                type: typeMatch ? typeMatch[1].trim() : 'Unknown',
+                                confidence: confidenceMatch ? confidenceMatch[1].trim() : 'Medium',
+                                description: descriptionMatch ? descriptionMatch[1].trim() : '',
+                                timestamp: Date.now(),
+                                sessionId: currentSessionId
+                            };
+                            newItems.push(item);
+                            currentSessionItems.add(commandText);
+                            
+                            // Store in Gun.js
+                            gun.get('items').get(item.id).put(item);
+                            gun.get('sessions').get(currentSessionId).get('items').set(item);
+                        }
+                    }
+                }
+            }
+            
+            // If no structured commands found, try to extract common sign language words
+            if (newItems.length === 0) {
+                const commonSigns = ['hello', 'goodbye', 'thank you', 'please', 'yes', 'no', 'help', 'sorry', 'good', 'bad', 'more', 'stop', 'go', 'come', 'sit', 'stand', 'eat', 'drink', 'happy', 'sad'];
+                
+                for (const sign of commonSigns) {
+                    if (response.toLowerCase().includes(sign) && !currentSessionItems.has(sign)) {
+                        const item = {
+                            id: `${currentSessionId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            name: sign.charAt(0).toUpperCase() + sign.slice(1),
+                            type: 'Word',
+                            confidence: 'Medium',
+                            description: 'Detected in sign language',
+                            timestamp: Date.now(),
+                            sessionId: currentSessionId
+                        };
+                        newItems.push(item);
+                        currentSessionItems.add(sign);
+                        
+                        // Store in Gun.js
+                        gun.get('items').get(item.id).put(item);
+                        gun.get('sessions').get(currentSessionId).get('items').set(item);
+                    }
+                }
+            }
+            
+            return newItems;
+        }
+
+
+        function displayItems(newItems) {
+            // Get all items from current session
+            gun.get('sessions').get(currentSessionId).get('items').map().once((item, id) => {
+                if (item && !document.getElementById(`item-${item.id}`)) {
+                    addItemToDisplay(item);
+                }
+            });
+
+            // Add any new items
+            newItems.forEach(item => addItemToDisplay(item));
+        }
+
+        function addItemToDisplay(item) {
+            // If no items are displayed yet, clear the "no items" message
+            if (itemsList.innerHTML.includes('No recognized commands detected')) {
+                itemsList.innerHTML = '';
+            }
+
+            // Create item card if it doesn't exist
+            if (!document.getElementById(`item-${item.id}`)) {
+                let borderColorClass = 'confidence-medium'; // Default for Medium or undefined
+                if (item.confidence) {
+                    switch (item.confidence.toLowerCase()) {
+                        case 'high':
+                            borderColorClass = 'confidence-high';
+                            break;
+                        case 'low':
+                            borderColorClass = 'confidence-low';
+                            break;
+                    }
+                }
+                
+                // Format the display based on type
+                let typeIcon = '💬';
+                if (item.type) {
+                    switch (item.type.toLowerCase()) {
+                        case 'letter':
+                            typeIcon = '🔤';
+                            break;
+                        case 'word':
+                            typeIcon = '📝';
+                            break;
+                        case 'sentence':
+                            typeIcon = '💬';
+                            break;
+                    }
+                }
+
+                const itemHTML = `
+                <div id="item-${item.id}" class="item-card ${borderColorClass}">
+                    <div class="item-name">${typeIcon} ${item.name}</div>
+                    <div class="item-details">
+                        <strong>Type:</strong> ${item.type}<br>
+                        <strong>Confidence:</strong> ${item.confidence}<br>
+                        <strong>Description:</strong> ${item.description}
+                    </div>
+                </div>
+                `;
+
+                itemsList.insertAdjacentHTML('beforeend', itemHTML);
+            }
+        }
+
+        async function scanForItems() {
+            if (!isProcessing) return;
+
+            updateStatus('processing', 'Recognizing sign language...');
+            
+            const imageBase64URL = captureImage();
+            if (!imageBase64URL) {
+                updateStatus('error', 'Failed to capture image');
+                return;
+            }
+
+            try {
+                const response = await sendChatCompletionRequest(SIGN_LANGUAGE_INSTRUCTION, imageBase64URL);
+                let signs = parseSignLanguageResponse(response);
+
+                displaySigns(signs);
+                
+                // Save signs to local storage
+                if (signs.length > 0) {
+                    saveSignsLocally(signs);
+                }
+                
+                updateStatus('ready', `Recognized ${signs.length} sign${signs.length !== 1 ? 's' : ''}`);
+            } catch (error) {
+                console.error('Scan error:', error);
+                updateStatus('error', `Scan failed: ${error.message}`);
+            }
+        }
+
+        function handleStart() {
+            if (!stream) {
+                alert('Camera not ready. Please ensure camera access is granted.');
+                return;
+            }
+            
+            // Clear previous session and start new one
+            clearCurrentSession();
+            currentSessionId = `scan_${Date.now()}`;
+            
+            // Create session in Gun.js
+            gun.get('sessions').get(currentSessionId).put({
+                id: currentSessionId,
+                startTime: Date.now(),
+                status: 'active'
+            });
+            
+            isProcessing = true;
+            startButton.textContent = "Stop Scanning";
+            startButton.classList.remove('start');
+            startButton.classList.add('stop');
+            
+            intervalSelect.disabled = true;
+            baseURL.disabled = true;
+            
+            const intervalMs = parseInt(intervalSelect.value, 10);
+            scanForItems(); // Initial scan
+            intervalId = setInterval(scanForItems, intervalMs);
+
+            // Show history section
+            historySection.style.display = 'block';
+            toggleHistoryBtn.textContent = 'Show';
+        }
+
+        function handleStop() {
+            isProcessing = false;
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            
+            startButton.textContent = "Start Scanning";
+            startButton.classList.remove('stop');
+            startButton.classList.add('start');
+            
+            intervalSelect.disabled = false;
+            baseURL.disabled = false;
+            
+            updateStatus('ready', 'Scanning stopped');
+        }
+
+        // FAB Controls
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsMenu = document.getElementById('settingsMenu');
+
+        settingsBtn.addEventListener('click', () => {
+            settingsMenu.classList.toggle('show');
+        });
+
+        // Close settings menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!settingsBtn.contains(e.target) && !settingsMenu.contains(e.target)) {
+                settingsMenu.classList.remove('show');
+            }
+        });
+
+        startButton.addEventListener('click', () => {
+            if (isProcessing) {
+                handleStop();
+                startButton.innerHTML = '💲<div class="scan-handle top"></div><div class="scan-handle bottom"></div>';
+            } else {
+                handleStart();
+                startButton.innerHTML = '⏹️<div class="scan-handle top"></div><div class="scan-handle bottom"></div>';
+            }
+        });
+
+        // History toggle functionality
+        let historyVisible = false;
+        toggleHistoryBtn.addEventListener('click', async () => {
+            historyVisible = !historyVisible;
+            if (historyVisible) {
+                historySection.style.display = 'block';
+                toggleHistoryBtn.textContent = 'Hide';
+                
+                // Load recent sessions
+                const sessions = await loadRecentSessions();
+                displayHistory(sessions);
+            } else {
+                historySection.style.display = 'none';
+                toggleHistoryBtn.textContent = 'Show';
+            }
+        });
+
+        // Raw output toggle functionality
+        const toggleRawBtn = document.getElementById('toggleRawBtn');
+        const rawOutput = document.getElementById('rawOutput');
+        let rawVisible = false;
+        
+        toggleRawBtn.addEventListener('click', () => {
+            rawVisible = !rawVisible;
+            if (rawVisible) {
+                rawOutput.style.display = 'block';
+                toggleRawBtn.textContent = 'Hide';
+            } else {
+                rawOutput.style.display = 'none';
+                toggleRawBtn.textContent = 'Show';
+            }
+        });
+
+
+        // Setup Wizard Functions
+        function checkEbayConfiguration() {
+            const hasCredentials = EBAY_CONFIG.clientId !== 'your-ebay-client-id' && 
+                                 EBAY_CONFIG.clientSecret !== 'your-ebay-client-secret';
+            isEbayConfigured = hasCredentials;
+            
+            const setupBtn = document.getElementById('setupEbayBtn');
+            if (isEbayConfigured) {
+                setupBtn.style.background = 'var(--success-color)';
+                setupBtn.style.color = 'white';
+                setupBtn.title = 'eBay API Configured';
+            } else {
+                setupBtn.style.background = 'var(--warning-color)';
+                setupBtn.style.color = 'white';
+                setupBtn.title = 'Setup eBay API';
+            }
+        }
+
+        function showSetupModal() {
+            setupModal.style.display = 'flex';
+            currentSetupStep = 1;
+            showSetupStep(currentSetupStep);
+        }
+
+        function hideSetupModal() {
+            setupModal.style.display = 'none';
+        }
+
+        function showSetupStep(step) {
+            currentSetupStep = step;
+            
+            // Hide all steps
+            document.querySelectorAll('.setup-step').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show current step
+            document.querySelector(`[data-step="${step}"]`).classList.add('active');
+            
+            // Update progress bar
+            const progressPercent = (step / 6) * 100;
+            progressFill.style.width = `${progressPercent}%`;
+            progressText.textContent = `Step ${step} of 6`;
+            
+            // Update buttons
+            setupPrevBtn.style.display = step > 1 ? 'inline-block' : 'none';
+            setupNextBtn.style.display = step < 6 ? 'inline-block' : 'none';
+            setupTestBtn.style.display = step === 5 ? 'inline-block' : 'none';
+            setupCloseBtn.style.display = step === 6 ? 'inline-block' : 'none';
+            
+            // Update button text
+            if (step === 4) {
+                setupNextBtn.textContent = 'Save & Test →';
+            } else if (step < 6) {
+                setupNextBtn.textContent = step === 1 ? 'Get Started →' : 'Continue →';
+            }
+        }
+
+        function nextSetupStep() {
+            if (currentSetupStep === 4) {
+                // Save credentials
+                const clientId = clientIdInput.value.trim();
+                const clientSecret = clientSecretInput.value.trim();
+                const useSandbox = sandboxMode.checked;
+                
+                if (!clientId || !clientSecret) {
+                    alert('Please enter both Client ID and Client Secret');
+                    return;
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('ebay_client_id', clientId);
+                localStorage.setItem('ebay_client_secret', clientSecret);
+                localStorage.setItem('ebay_sandbox', useSandbox.toString());
+                
+                // Update config
+                EBAY_CONFIG.clientId = clientId;
+                EBAY_CONFIG.clientSecret = clientSecret;
+                EBAY_CONFIG.sandbox = useSandbox;
+                
+                checkEbayConfiguration();
+                showNotification('eBay API credentials saved successfully!', 'success');
+            }
+            
+            if (currentSetupStep < 6) {
+                currentSetupStep++;
+                showSetupStep(currentSetupStep);
+            }
+        }
+
+        function prevSetupStep() {
+            if (currentSetupStep > 1) {
+                currentSetupStep--;
+                showSetupStep(currentSetupStep);
+            }
+        }
+
+        async function testEbayConnection() {
+            connectionStatus.innerHTML = '🔄 Testing connection...';
+            connectionStatus.style.background = 'rgba(237, 137, 54, 0.1)';
+            
+            try {
+                // Test with a simple search
+                const priceData = await fetchEbayPriceEstimate('iPhone');
+                
+                if (priceData && !priceData.isMockData) {
+                    connectionStatus.innerHTML = '✅ Connection successful! eBay API is working correctly.';
+                    connectionStatus.style.background = 'rgba(72, 187, 120, 0.1)';
+                    
+                    setTimeout(() => {
+                        currentSetupStep = 6;
+                        showSetupStep(currentSetupStep);
+                    }, 1500);
+                } else {
+                    throw new Error('API returned mock data');
+                }
+            } catch (error) {
+                connectionStatus.innerHTML = `❌ Connection failed: ${error.message}<br><br>Please check your credentials and try again.`;
+                connectionStatus.style.background = 'rgba(229, 62, 62, 0.1)';
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `<strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, duration);
+        }
+
+        // Loading screen management
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadingText = document.getElementById('loadingText');
+        
+        function updateLoadingItem(id, status, text = null) {
+            const item = document.getElementById(id);
+            const icon = item.querySelector('.loading-icon');
+            
+            switch(status) {
+                case 'success':
+                    icon.textContent = '✅';
+                    item.classList.add('success');
+                    break;
+                case 'error':
+                    icon.textContent = '❌';
+                    item.classList.add('error');
+                    break;
+                case 'loading':
+                    icon.textContent = '⏳';
+                    break;
+            }
+            
+            if (text) {
+                item.querySelector('span:last-child').textContent = text;
+            }
+        }
+
+        async function initializeApp() {
+            try {
+                // Check browser compatibility
+                updateLoadingItem('checkBrowser', 'loading');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    updateLoadingItem('checkBrowser', 'error', 'Camera API not supported');
+                    throw new Error('Browser not compatible');
+                }
+                updateLoadingItem('checkBrowser', 'success', 'Browser compatible');
+
+                // Check Gun.js loading
+                updateLoadingItem('checkGun', 'loading');
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                if (typeof Gun === 'undefined') {
+                    updateLoadingItem('checkGun', 'error', 'Failed to load Gun.js');
+                    throw new Error('Gun.js not loaded');
+                }
+                updateLoadingItem('checkGun', 'success', 'Local database ready');
+
+                // Initialize camera
+                updateLoadingItem('checkCamera', 'loading');
+                await initCamera();
+                updateLoadingItem('checkCamera', 'success', 'Camera initialized');
+
+                // Check AI server connection (quick check, don't block loading)
+                updateLoadingItem('checkAI', 'loading');
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                    
+                    const response = await fetch(`${baseURL.value}/health`, { 
+                        method: 'GET',
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        updateLoadingItem('checkAI', 'success', 'AI server connected');
+                        showNotification('AI server ready for scanning!', 'success', 3000);
+                    } else {
+                        throw new Error('Server not ready');
+                    }
+                } catch (error) {
+                    updateLoadingItem('checkAI', 'error', 'AI server offline (app still works)');
+                    console.warn('AI server not available:', error);
+                    showNotification('AI server offline - you can still use the app and set up eBay integration!', 'info', 5000);
+                }
+
+                // All done
+                loadingText.textContent = 'Ready to start scanning!';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                loadingScreen.classList.add('hidden');
+                checkEbayConfiguration();
+
+                // Auto-show setup if eBay not configured
+                if (!isEbayConfigured) {
+                    setTimeout(() => {
+                        showNotification('Click "Setup eBay API" to get real-time pricing!', 'info', 5000);
+                    }, 1000);
+                }
+
+            } catch (error) {
+                console.error('App initialization failed:', error);
+                loadingText.textContent = 'Setup completed with warnings - you can still use the app!';
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                    checkEbayConfiguration();
+                }, 2000);
+            }
+        }
+
+        // Setup Wizard event listeners
+        setupEbayBtn.addEventListener('click', showSetupModal);
+        setupNextBtn.addEventListener('click', nextSetupStep);
+        setupPrevBtn.addEventListener('click', prevSetupStep);
+        setupTestBtn.addEventListener('click', testEbayConnection);
+        setupCloseBtn.addEventListener('click', hideSetupModal);
+
+        // Close modal when clicking outside
+        setupModal.addEventListener('click', (e) => {
+            if (e.target === setupModal) {
+                hideSetupModal();
+            }
+        });
+
+        // Keyboard navigation for setup wizard
+        setupModal.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideSetupModal();
+            } else if (e.key === 'Enter' && currentSetupStep === 5) {
+                testEbayConnection();
+            }
+        });
+
+        // Enter key on credential inputs
+        clientIdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                clientSecretInput.focus();
+            }
+        });
+
+        clientSecretInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                nextSetupStep();
+            }
+        });
+
+        // Pre-fill credentials if they exist
+        if (localStorage.getItem('ebay_client_id')) {
+            clientIdInput.value = localStorage.getItem('ebay_client_id');
+        }
+        if (localStorage.getItem('ebay_client_secret')) {
+            clientSecretInput.value = localStorage.getItem('ebay_client_secret');
+        }
+        if (localStorage.getItem('ebay_sandbox')) {
+            sandboxMode.checked = localStorage.getItem('ebay_sandbox') === 'true';
+        }
+
+
+        // Llama chat handler
+        function setupLlamaChat() {
+            document.getElementById('llamaBtn').addEventListener('click', () => {
+                window.open('http://localhost:8080', '_blank');
+            });
+        }
+
+        // Initialize the app
+        async function initApp() {
+            await initCamera();
+            checkEbayConfiguration();
+            setupCameraRotation();
+            setupLlamaChat();
+            
+            // Show setup modal if eBay is not configured
+            if (!isEbayConfigured) {
+                setTimeout(() => {
+                    showSetupModal();
+                }, 1000);
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', initApp);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        });
+
+        // Enhanced PWA installation for mobile
+        let deferredPrompt;
+        let installPromptShown = false;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install prompt for mobile users
+            if (!installPromptShown && isMobileDevice()) {
+                showMobileInstallPrompt();
+                installPromptShown = true;
+            }
+        });
+
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function showMobileInstallPrompt() {
+            const installBanner = document.createElement('div');
+            installBanner.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, var(--accent-color), #5a9fd4);
+                color: white;
+                padding: 15px;
+                text-align: center;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: slideDown 0.3s ease;
+            `;
+            
+            installBanner.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 8px;">📱 Install Simply eBay</div>
+                <div style="font-size: 0.9em; margin-bottom: 12px;">Get the full mobile experience with offline AI!</div>
+                <button id="installBtn" style="
+                    background: white;
+                    color: var(--accent-color);
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    font-weight: 600;
+                    margin-right: 10px;
+                    cursor: pointer;
+                ">Install App</button>
+                <button id="dismissBtn" style="
+                    background: transparent;
+                    color: white;
+                    border: 1px solid white;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    font-weight: 600;
+                    cursor: pointer;
+                ">Maybe Later</button>
+            `;
+            
+            document.body.appendChild(installBanner);
+            
+            // Add slide down animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideDown {
+                    from { transform: translateY(-100%); }
+                    to { transform: translateY(0); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Handle install button
+            document.getElementById('installBtn').addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            if ('setAppBadge' in navigator) {
+                                // Clear any existing badge
+                                navigator.clearAppBadge().catch(err => console.error('Failed to clear badge:', err));
+                                
+                                // Show "AI Ready" badge when model is downloaded
+                                if (localStorage.getItem('model_downloaded')) {
+                                    navigator.setAppBadge(1).catch(err => console.error('Failed to set badge:', err));
+                                    setTimeout(() => {
+                                        navigator.clearAppBadge().catch(err => console.error('Failed to clear badge:', err));
+                                    }, 5000);
+                                }
+                            }
+                            showNotification('App installed! You can now use Simply eBay offline.', 'success', 5000);
+                        }
+                    deferredPrompt = null;
+                }
+                document.body.removeChild(installBanner);
+            });
+            
+            // Handle dismiss button
+            document.getElementById('dismissBtn').addEventListener('click', () => {
+                document.body.removeChild(installBanner);
+                localStorage.setItem('install_prompt_dismissed', Date.now());
+            });
+            
+            // Auto-dismiss after 10 seconds
+            setTimeout(() => {
+                if (document.body.contains(installBanner)) {
+                    document.body.removeChild(installBanner);
+                }
+            }, 10000);
+        }
+
+        // Show install prompt again after 24 hours if dismissed
+        function checkInstallPrompt() {
+            const dismissed = localStorage.getItem('install_prompt_dismissed');
+            if (dismissed && Date.now() - parseInt(dismissed) > 24 * 60 * 60 * 1000) {
+                localStorage.removeItem('install_prompt_dismissed');
+                installPromptShown = false;
+            }
+        }
+
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            checkInstallPrompt();
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
