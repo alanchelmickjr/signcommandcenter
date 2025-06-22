@@ -5,3 +5,18 @@ dist/
 coverage/
 .env
 .env.local
+
+# AI/ML Model files
+*.gguf
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx
+*.h5
+models/SmolVLM/
+
+# Additional large file patterns
+*.model
+*.weights
+*.checkpoint
