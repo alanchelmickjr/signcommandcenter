@@ -120,6 +120,10 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadComponents();
+            // Initialize UI controls after components are loaded
+            if (typeof initializeUIControls === 'function') {
+                initializeUIControls();
+            }
             // Initialize the app after components are loaded
             if (typeof initializeApp === 'function') {
                 initializeApp();

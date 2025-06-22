@@ -17,4 +17,3 @@ INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a
  * Running on http://127.0.0.1:5001
  * Running on http://10.56.144.27:5001
 INFO:werkzeug:[33mPress CTRL+C to quit[0m
-INFO:werkzeug:127.0.0.1 - - [22/Jun/2025 09:52:44] "GET /health HTTP/1.1" 200 -
