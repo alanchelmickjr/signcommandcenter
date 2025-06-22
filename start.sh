@@ -47,6 +47,7 @@ fi
 # Kill any existing processes first (be specific about llama-server path)
 echo "🧹 Cleaning up any existing processes..."
 pkill -f "python.*asl_server" 2>/dev/null || true
+pkill -f "python.*robot_executor" 2>/dev/null || true
 pkill -f "python.*https-server" 2>/dev/null || true
 pkill -f "python.*http.server" 2>/dev/null || true
 pkill -f "node.*gun-relay" 2>/dev/null || true
@@ -290,6 +291,10 @@ cleanup() {
         kill $ASL_PID 2>/dev/null
         echo "   ✅ ASL server stopped"
     fi
+    if [ ! -z "$ROBOT_PID" ] && kill -0 $ROBOT_PID 2>/dev/null; then
+        kill $ROBOT_PID 2>/dev/null
+        echo "   ✅ Robot executor stopped"
+    fi
     if [ ! -z "$HTTPS_PID" ] && kill -0 $HTTPS_PID 2>/dev/null; then
         kill $HTTPS_PID 2>/dev/null
         echo "   ✅ HTTPS server stopped"
@@ -474,6 +479,48 @@ else
     ASL_PID=""
 fi
 
+# Start Robot Executor Server for ASL-to-Robot Control
+echo ""
+echo "🤖 Starting Robot Executor Server on port 5002..."
+if [ -f "robot_executor.py" ]; then
+    $PYTHON_CMD robot_executor.py > robot-executor.log 2>&1 &
+    ROBOT_PID=$!
+    
+    # Wait for Robot executor to be ready
+    echo "⏳ Waiting for Robot executor to initialize..."
+    sleep 2
+    MAX_ROBOT_RETRIES=15
+    ROBOT_RETRY_COUNT=0
+    while [ $ROBOT_RETRY_COUNT -lt $MAX_ROBOT_RETRIES ]; do
+        if curl -s "http://localhost:5002/robot/health" >/dev/null 2>&1; then
+            echo "✅ Robot Executor Server ready!"
+            break
+        fi
+        
+        # Check if process is still running
+        if ! kill -0 $ROBOT_PID 2>/dev/null; then
+            echo "❌ Robot executor process died. Check robot-executor.log for details."
+            echo "   Last few lines of log:"
+            tail -n 5 robot-executor.log 2>/dev/null || echo "   (No log file found)"
+            break
+        fi
+        
+        if [ $((ROBOT_RETRY_COUNT % 5)) -eq 0 ] && [ $ROBOT_RETRY_COUNT -gt 0 ]; then
+            echo "   Still waiting for Robot executor... ($ROBOT_RETRY_COUNT/${MAX_ROBOT_RETRIES})"
+        fi
+        
+        sleep 1
+        ROBOT_RETRY_COUNT=$((ROBOT_RETRY_COUNT + 1))
+    done
+    
+    if [ $ROBOT_RETRY_COUNT -eq $MAX_ROBOT_RETRIES ]; then
+        echo "❌ Robot executor failed to start within timeout. Check robot-executor.log for details."
+    fi
+else
+    echo "❌ robot_executor.py not found. Robot control will not be available."
+    ROBOT_PID=""
+fi
+
 # Start HTTPS Server for camera access
 echo ""
 echo "🔐 Starting HTTPS Server on port $HTTPS_PORT..."
@@ -540,6 +587,11 @@ if [ ! -z "$ASL_PID" ] && kill -0 $ASL_PID 2>/dev/null; then
     echo "   🤟 ASL Server: http://localhost:$ASL_PORT"
 else
     echo "   🤟 ASL Server: ❌ Not running"
+fi
+if [ ! -z "$ROBOT_PID" ] && kill -0 $ROBOT_PID 2>/dev/null; then
+    echo "   🤖 Robot Executor: http://localhost:5002"
+else
+    echo "   🤖 Robot Executor: ❌ Not running"
 fi
 echo ""
 echo "📁 Training Data will be saved to:"
