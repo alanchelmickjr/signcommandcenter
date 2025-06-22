@@ -27,3 +27,124 @@ load_hparams: model size:         103.73 MiB
 load_hparams: metadata size:      0.07 MiB
 alloc_compute_meta:      Metal compute buffer size =    60.00 MiB
 alloc_compute_meta:        CPU compute buffer size =     6.00 MiB
+encoding image slice...
+image slice encoded in 201 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 166 ms
+encoding image slice...
+image slice encoded in 181 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 165 ms
+encoding image slice...
+image slice encoded in 178 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 274 ms
+encoding image slice...
+image slice encoded in 227 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 336 ms
+encoding image slice...
+image slice encoded in 182 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 177 ms
+encoding image slice...
+image slice encoded in 164 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 177 ms
+encoding image slice...
+image slice encoded in 173 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 162 ms
+encoding image slice...
+image slice encoded in 172 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 180 ms
+encoding image slice...
+image slice encoded in 166 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 183 ms
+encoding image slice...
+image slice encoded in 206 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 953 ms
+encoding image slice...
+image slice encoded in 181 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 171 ms
+encoding image slice...
+image slice encoded in 191 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 254 ms
+encoding image slice...
+image slice encoded in 169 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 166 ms
+encoding image slice...
+image slice encoded in 169 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 146 ms
+encoding image slice...
+image slice encoded in 169 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 157 ms
+encoding image slice...
+image slice encoded in 174 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 191 ms
+encoding image slice...
+image slice encoded in 172 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 179 ms
+encoding image slice...
+image slice encoded in 171 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 149 ms
+encoding image slice...
+image slice encoded in 182 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 172 ms
+encoding image slice...
+image slice encoded in 173 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 155 ms
+encoding image slice...
+image slice encoded in 170 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 154 ms
+encoding image slice...
+image slice encoded in 177 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 174 ms
+encoding image slice...
+image slice encoded in 175 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 150 ms
+encoding image slice...
+image slice encoded in 171 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 153 ms
+encoding image slice...
+image slice encoded in 172 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 179 ms
+encoding image slice...
+image slice encoded in 171 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 153 ms
+encoding image slice...
+image slice encoded in 164 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 157 ms
+encoding image slice...
+image slice encoded in 215 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 230 ms
+encoding image slice...
+image slice encoded in 174 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 194 ms
+encoding image slice...
+image slice encoded in 174 ms
+decoding image batch 1/1, n_tokens_batch = 64
+image decoded (batch 1/1) in 150 ms
+encoding image s

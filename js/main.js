@@ -226,79 +226,35 @@ async function loadRecentSessions() {
 
 async function sendChatCompletionRequest(instruction, imageBase64URL) {
     try {
-        // Try ASL server first (port 5001) - it's working!
+        // Use ASL server directly
         const response = await fetch(`${ASL_SERVER_URL}/v1/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: "gpt-4-vision-preview",
+                max_tokens: 100,
                 messages: [
-                    {
-                        role: "user",
-                        content: [
-                            {
-                                type: "text",
-                                text: instruction
-                            },
-                            {
-                                type: "image_url",
-                                image_url: {
-                                    url: imageBase64URL
-                                }
-                            }
-                        ]
-                    }
-                ],
-                max_tokens: 500
+                    { role: 'user', content: [
+                        { type: 'text', text: instruction },
+                        { type: 'image_url', image_url: {
+                            url: imageBase64URL,
+                        } }
+                    ] },
+                ]
             })
         });
-
-        if (response.ok) {
-            const data = await response.json();
-            return data.choices[0].message.content;
+        
+        if (!response.ok) {
+            const errorData = await response.text();
+            return `Server error: ${response.status} - ${errorData}`;
         }
         
-        // If ASL server fails, try main AI server
-        const aiResponse = await fetch(`${baseURL.value}/v1/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: "gpt-4-vision-preview",
-                messages: [
-                    {
-                        role: "user",
-                        content: [
-                            {
-                                type: "text",
-                                text: instruction
-                            },
-                            {
-                                type: "image_url",
-                                image_url: {
-                                    url: imageBase64URL
-                                }
-                            }
-                        ]
-                    }
-                ],
-                max_tokens: 500
-            })
-        });
-
-        if (aiResponse.ok) {
-            const data = await aiResponse.json();
-            return data.choices[0].message.content;
-        }
-        
-        throw new Error('Both servers unavailable');
+        const data = await response.json();
+        return data.choices[0].message.content;
         
     } catch (error) {
-        // Fallback to local pattern recognition
-        console.log('Both servers unavailable, using local fallback');
+        console.log('ASL server unavailable, using local fallback');
         return performLocalASLRecognition(imageBase64URL);
     }
 }
@@ -327,22 +283,23 @@ function performLocalASLRecognition(imageBase64URL) {
 async function initCamera() {
     try {
         // Start with portrait constraints
-        stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: {
                 facingMode: 'environment',
                 aspectRatio: { ideal: 0.75 }, // 3:4 portrait ratio
                 width: { ideal: 720 },
                 height: { ideal: 1280 }
-            }, 
-            audio: false 
+            },
+            audio: false
         });
         video.srcObject = stream;
         updateStatus('ready', 'Camera ready - start ASL recognition');
         return true;
     } catch (err) {
         console.error("Error accessing camera:", err);
-        updateStatus('error', `Camera error: ${err.message}`);
-        throw err;
+        // Don't throw error, continue without camera for demo
+        updateStatus('ready', 'Demo mode - simulating ASL recognition without camera');
+        return false;
     }
 }
 
@@ -451,35 +408,56 @@ let currentSessionId = `scan_${Date.now()}`;
 let currentSessionItems = new Set();
 
 function parseSignLanguageResponse(response) {
-    // Show raw output for debugging
-    document.getElementById('rawOutput').textContent = response;
+    // Show raw output for debugging - this is the status feedback!
+    const rawOutput = document.getElementById('rawOutput');
+    if (rawOutput) {
+        // Filter and show only ASL-specific content
+        const aslLines = response.split('\n').filter(line =>
+            line.includes('RECOGNIZED_ASL:') ||
+            line.includes('ASL RECOGNITION:') ||
+            line.includes('CONFIDENCE:') ||
+            line.includes('DESCRIPTION:') ||
+            line.includes('TIMESTAMP:') ||
+            line.includes('MODE:') ||
+            line.toLowerCase().includes('sign language') ||
+            line.toLowerCase().includes('gesture')
+        );
+        
+        const filteredContent = aslLines.length > 0 ? aslLines.join('\n') : 'No ASL content detected in response';
+        rawOutput.textContent = filteredContent;
+        rawOutput.style.display = 'block';
+    }
     
     const recognizedSigns = [];
     const lines = response.split('\n');
     
     for (const line of lines) {
-        if (line.includes('SIGN:')) {
-            const signMatch = line.match(/SIGN:\s*([^|]+)/);
+        // Check for both SIGN: and RECOGNIZED_ASL: formats
+        if (line.includes('RECOGNIZED_ASL:') || line.includes('SIGN:')) {
+            const signMatch = line.match(/(?:RECOGNIZED_ASL|SIGN):\s*([^|]+)/);
             const confidenceMatch = line.match(/CONFIDENCE:\s*([^|]+)/);
             const descriptionMatch = line.match(/DESCRIPTION:\s*([^|]+)/);
             
             if (signMatch) {
                 const signText = signMatch[1].trim();
-                // Only add if not already in current session
-                if (!currentSessionItems.has(signText)) {
-                    const sign = {
-                        id: `sign-${Date.now()}`,
-                        name: signText,
-                        confidence: confidenceMatch ? confidenceMatch[1].trim() : 'Medium',
-                        description: descriptionMatch ? descriptionMatch[1].trim() : 'N/A',
-                        timestamp: Date.now()
-                    };
-                    recognizedSigns.push(sign);
-                    currentSessionItems.add(signText);
-                    
-                    // Store in Gun.js
-                    gun.get('signs').get(sign.id).put(sign);
-                    gun.get('sessions').get(currentSessionId).get('signs').set(sign);
+                // Skip "none" responses but still show in status
+                if (signText.toLowerCase() !== 'none') {
+                    // Only add if not already in current session
+                    if (!currentSessionItems.has(signText)) {
+                        const sign = {
+                            id: `sign-${Date.now()}`,
+                            name: signText,
+                            confidence: confidenceMatch ? confidenceMatch[1].trim() : 'Medium',
+                            description: descriptionMatch ? descriptionMatch[1].trim() : 'N/A',
+                            timestamp: Date.now()
+                        };
+                        recognizedSigns.push(sign);
+                        currentSessionItems.add(signText);
+                        
+                        // Store in Gun.js
+                        gun.get('signs').get(sign.id).put(sign);
+                        gun.get('sessions').get(currentSessionId).get('signs').set(sign);
+                    }
                 }
             }
         }
@@ -604,13 +582,15 @@ async function sendRobotCommand(command) {
         if (response.ok) {
             const result = await response.json();
             console.log(`Robot command executed: ${command}`, result);
+            showNotification(`Robot executed: ${command}`, 'success', 2000);
         } else {
-            console.error('Robot command failed');
+            console.warn(`Robot command failed: ${response.status}`);
+            showNotification(`Robot would execute: ${command} (simulated)`, 'info', 2000);
         }
     } catch (error) {
-        console.error('Robot communication error:', error);
-        // For demo purposes, simulate robot action
-        showNotification(`Robot would execute: ${command}`, 'info', 2000);
+        console.warn('Robot communication error:', error);
+        // Soft fail - show what would happen
+        showNotification(`Robot would execute: ${command} (robot offline)`, 'info', 2000);
     }
 }
 
@@ -738,7 +718,7 @@ function handleStart() {
     
     clearCurrentSession();
     
-    const interval = parseInt(intervalSelect.value, 10);
+    const interval = 1000; // Use 1 second interval
     intervalId = setInterval(scanForItems, interval);
     scanForItems(); // Initial scan
 }
@@ -967,7 +947,7 @@ async function initializeApp() {
     setTimeout(() => {
         loadingScreen.classList.add('hidden');
         console.log('✅ Loading screen hidden - Ready for ASL recognition!');
-    }, 500);
+    }, 1000);
 }
 
 // Event Listeners
