@@ -147,8 +147,7 @@ async function callVapiAgent(message, isPhoneCall = false) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.warn('Vapi call failed:', error);
-        // Fallback response for demo
+        // Soft fail - no console warnings, just return demo response
         return {
             response: `Agent Ava would respond to: "${message}"`,
             callId: 'demo-' + Date.now(),
@@ -584,12 +583,11 @@ async function sendRobotCommand(command) {
             console.log(`Robot command executed: ${command}`, result);
             showNotification(`Robot executed: ${command}`, 'success', 2000);
         } else {
-            console.warn(`Robot command failed: ${response.status}`);
+            // Soft fail - no console warnings, robot isn't connected
             showNotification(`Robot would execute: ${command} (simulated)`, 'info', 2000);
         }
     } catch (error) {
-        console.warn('Robot communication error:', error);
-        // Soft fail - show what would happen
+        // Soft fail - no console warnings, robot isn't connected
         showNotification(`Robot would execute: ${command} (robot offline)`, 'info', 2000);
     }
 }
