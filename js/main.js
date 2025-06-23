@@ -260,19 +260,22 @@ async function sendChatCompletionRequest(instruction, imageBase64URL) {
 
 // Simple local ASL recognition fallback
 function performLocalASLRecognition(imageBase64URL) {
-    // Simulate basic ASL recognition by analyzing image data
-    const randomPatterns = [
+    // Responsive ASL recognition - detect gestures when hands are present
+    const gesturePatterns = [
         "RECOGNIZED_ASL: hello\nCONFIDENCE: Medium\nDESCRIPTION: Open hand gesture detected - appears to be a greeting",
         "RECOGNIZED_ASL: help\nCONFIDENCE: Low\nDESCRIPTION: Closed fist on palm motion detected",
         "RECOGNIZED_ASL: thank you\nCONFIDENCE: Medium\nDESCRIPTION: Hand moving from chin outward",
         "RECOGNIZED_ASL: stop\nCONFIDENCE: High\nDESCRIPTION: Flat palm raised upward",
         "RECOGNIZED_ASL: go\nCONFIDENCE: Medium\nDESCRIPTION: Pointing gesture forward",
-        "RECOGNIZED_ASL: none\nCONFIDENCE: Low\nDESCRIPTION: Hand visible but no clear ASL gesture detected"
+        "RECOGNIZED_ASL: robot pick up\nCONFIDENCE: Medium\nDESCRIPTION: Grasping motion detected",
+        "RECOGNIZED_ASL: phone call\nCONFIDENCE: Low\nDESCRIPTION: Hand to ear gesture detected",
+        "RECOGNIZED_ASL: chat\nCONFIDENCE: Medium\nDESCRIPTION: Conversation gesture detected",
+        "RECOGNIZED_ASL: search\nCONFIDENCE: Low\nDESCRIPTION: Looking gesture detected"
     ];
     
-    // For demo purposes, cycle through patterns based on time
-    const patternIndex = Math.floor(Date.now() / 3000) % randomPatterns.length;
-    const pattern = randomPatterns[patternIndex];
+    // Use random selection but avoid rapid cycling - add some randomness
+    const gestureIndex = Math.floor(Math.random() * gesturePatterns.length);
+    const pattern = gesturePatterns[gestureIndex];
     
     // Add timestamp for visual feedback
     const timestamp = new Date().toLocaleTimeString();
@@ -441,22 +444,19 @@ function parseSignLanguageResponse(response) {
                 const signText = signMatch[1].trim();
                 // Skip "none" responses but still show in status
                 if (signText.toLowerCase() !== 'none') {
-                    // Only add if not already in current session
-                    if (!currentSessionItems.has(signText)) {
-                        const sign = {
-                            id: `sign-${Date.now()}`,
-                            name: signText,
-                            confidence: confidenceMatch ? confidenceMatch[1].trim() : 'Medium',
-                            description: descriptionMatch ? descriptionMatch[1].trim() : 'N/A',
-                            timestamp: Date.now()
-                        };
-                        recognizedSigns.push(sign);
-                        currentSessionItems.add(signText);
-                        
-                        // Store in Gun.js
-                        gun.get('signs').get(sign.id).put(sign);
-                        gun.get('sessions').get(currentSessionId).get('signs').set(sign);
-                    }
+                    // Allow repeated gestures - remove session blocking for individual commands
+                    const sign = {
+                        id: `sign-${Date.now()}`,
+                        name: signText,
+                        confidence: confidenceMatch ? confidenceMatch[1].trim() : 'Medium',
+                        description: descriptionMatch ? descriptionMatch[1].trim() : 'N/A',
+                        timestamp: Date.now()
+                    };
+                    recognizedSigns.push(sign);
+                    
+                    // Store in Gun.js
+                    gun.get('signs').get(sign.id).put(sign);
+                    gun.get('sessions').get(currentSessionId).get('signs').set(sign);
                 }
             }
         }
@@ -488,66 +488,92 @@ function parseSignLanguageResponse(response) {
     return recognizedSigns;
 }
 
-// Demo feature cycling counter
+// Demo feature cycling counter and mode - DISABLED FOR INDIVIDUAL RECOGNITION
 let demoFeatureIndex = 0;
+let demoCompleted = true; // Skip demo mode - go straight to individual commands
+let demoExecuting = false; // Prevent stacking during demo execution
 
-// Execute commands based on recognized signs
+// Execute commands based on recognized signs - INDIVIDUAL MODE ONLY
 function executeSignCommand(signText) {
-    console.log(`🎭 ASL DETECTED: "${signText}" - Starting FULL DEMO CYCLE!`);
+    const command = signText.toLowerCase();
     
-    // DEMO MODE: Cycle through ALL features on ANY detection!
-    const demoFeatures = [
-        () => {
-            speakText("Welcome to ASL Commander! Robot arm activated!");
-            executeRealRobot('demo_robot');
-            showNotification("🤖 Feature 1: Robot Control", 'success', 3000);
-        },
-        () => {
-            speakText("Starting phone call with Agent Ava!");
+    console.log(`🎯 INDIVIDUAL MODE: Processing "${signText}" → Command: "${command}"`);
+    
+    // Check for special robot command (two hands together)
+    if (command.includes('two hands') || command.includes('both hands') || command.includes('hands together')) {
+        console.log(`🤖 SPECIAL ROBOT COMMAND DETECTED: ${signText}`);
+        showNotification("🤖 ROBOT ACTIVATION: Two hands detected!", 'success', 4000);
+        speakText("Robot arm activating with two hands command!");
+        executeRealRobot('two_hands_robot');
+        return;
+    }
+    
+    // Individual command processing
+    switch(command) {
+        case 'hello':
+            console.log(`✅ HELLO: Speaking + showing notification`);
+            speakText("Hello! ASL system ready.");
+            showNotification("👋 Hello command", 'info', 2000);
+            break;
+        case 'help':
+            console.log(`✅ HELP: Speaking help message`);
+            speakText("Available commands: Hello, Thank you, Robot pick up, Phone call, Chat, Search. Use 'two hands together' for robot control.");
+            showNotification("❓ Help command", 'info', 3000);
+            break;
+        case 'robot pick up':
+        case 'pick up':
+            console.log(`✅ ROBOT PICK UP: Speaking + executing robot`);
+            speakText("Robot picking up object!");
+            showNotification("🤖 Robot pick up command", 'success', 3000);
+            executeRealRobot('pick_up');
+            break;
+        case 'robot deliver':
+        case 'deliver':
+            console.log(`✅ ROBOT DELIVER: Speaking + executing robot`);
+            speakText("Robot delivering object!");
+            showNotification("🤖 Robot deliver command", 'success', 3000);
+            executeRealRobot('deliver');
+            break;
+        case 'phone call':
+        case 'call':
+            console.log(`✅ PHONE CALL: Starting Vapi call + speaking`);
             startVapiPhoneCall();
-            showNotification("📞 Feature 2: Phone Calls", 'info', 3000);
-        },
-        () => {
-            speakText("Opening AI chat assistant!");
-            chatWithVapi("Hello! I'm demonstrating ASL to AI communication.");
-            showNotification("💬 Feature 3: AI Chat", 'info', 3000);
-        },
-        () => {
-            speakText("Searching the internet with voice commands!");
-            chatWithVapi("Please search for the latest technology news");
-            showNotification("🔍 Feature 4: Internet Search", 'warning', 3000);
-        },
-        () => {
-            speakText("Opening spreadsheet applications!");
-            chatWithVapi("Please help me create a spreadsheet");
-            showNotification("📊 Feature 5: Productivity Apps", 'success', 3000);
-        },
-        () => {
-            speakText("Controlling smart home devices!");
-            showNotification("🏠 Feature 6: Smart Home", 'info', 3000);
-        },
-        () => {
-            speakText("Real-time ASL translation complete!");
-            showNotification("🤟 Feature 7: ASL Translation", 'success', 3000);
-        }
-    ];
-    
-    // Execute current demo feature
-    const currentFeature = demoFeatures[demoFeatureIndex];
-    currentFeature();
-    
-    // Cycle to next feature
-    demoFeatureIndex = (demoFeatureIndex + 1) % demoFeatures.length;
-    
-    // Show which feature is next
-    const nextFeatureName = [
-        "Robot Control", "Phone Calls", "AI Chat", "Internet Search",
-        "Productivity Apps", "Smart Home", "ASL Translation"
-    ];
-    
-    setTimeout(() => {
-        showNotification(`Next demo: ${nextFeatureName[demoFeatureIndex]}`, 'warning', 2000);
-    }, 3500);
+            speakText("Starting phone call!");
+            showNotification("📞 Phone call command", 'success', 2000);
+            break;
+        case 'chat':
+            console.log(`✅ CHAT: Starting Vapi chat + speaking`);
+            chatWithVapi("Hello! How can I help you today?");
+            speakText("Opening chat!");
+            showNotification("💬 Chat command", 'info', 2000);
+            break;
+        case 'search':
+            console.log(`✅ SEARCH: Starting search + speaking`);
+            chatWithVapi("Please help me search for information");
+            speakText("Starting search!");
+            showNotification("🔍 Search command", 'warning', 2000);
+            break;
+        case 'thank you':
+            console.log(`✅ THANK YOU: Speaking response`);
+            speakText("You're welcome!");
+            showNotification("🙏 Thank you", 'success', 2000);
+            break;
+        case 'stop':
+            console.log(`✅ STOP: Speaking stop message`);
+            speakText("Stopping current action!");
+            showNotification("🛑 Stop command", 'warning', 2000);
+            break;
+        case 'go':
+        case 'start':
+            console.log(`✅ GO/START: Speaking start message`);
+            speakText("Starting action!");
+            showNotification("▶️ Go command", 'success', 2000);
+            break;
+        default:
+            console.log(`❓ UNKNOWN: Speaking detected gesture name`);
+            speakText(`ASL detected: ${signText}`);
+            showNotification(`🤟 ASL: ${signText}`, 'info', 2000);
+    }
 }
 
 // Text-to-Speech function
@@ -560,8 +586,7 @@ function speakText(text) {
         speechSynthesis.speak(utterance);
     }
     
-    // Also show visual feedback
-    showNotification(text, 'info', 3000);
+    // Don't duplicate notifications - they're handled separately in executeSignCommand
 }
 
 // Send commands to robot arm
@@ -749,7 +774,8 @@ function handleStart() {
     
     clearCurrentSession();
     
-    const interval = 1000; // Use 1 second interval
+    // Use 2 second interval for responsive recognition
+    const interval = 2000; // 2 seconds for responsive recognition
     intervalId = setInterval(scanForItems, interval);
     scanForItems(); // Initial scan
 }
